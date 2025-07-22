@@ -128,7 +128,14 @@ function refreshMarketUI(){
     let price=currentPrices.crypto[sym];
     let change=(Math.random()-0.5)*(hopium/200);
     currentPrices.crypto[sym]=price*(1+change);
-    const tr=document.createElement('tr'); tr.onclick = ()=>openMarketInfoModal(name,sym,'crypto');
+    const tr = document.createElement('tr');
+tr.dataset.name = name;
+tr.dataset.symbol = sym;
+tr.addEventListener('click', (e) => {
+  const row = e.currentTarget;
+  openMarketInfoModal(row.dataset.name, row.dataset.symbol, 'crypto');
+});
+
     tr.innerHTML = `<td>${name} (${sym})</td><td>$${price.toFixed(2)}</td><td class="${change>=0?'positive':'negative'}">${(change*100).toFixed(2)}%</td>`;
     tbody.appendChild(tr);
   }
@@ -154,7 +161,13 @@ setInterval(refreshMarketUI,5000);
 let selected = null, selType=null;
 function openMarketInfoModal(name,sym,type){
   selected=sym; selType=type;
-  const price= (type==='crypto'?currentPrices.crypto:sym in currentPrices.stocks?currentPrices.stocks[sym]:0);
+  const price = assetType === 'crypto' ? currentPrices.crypto[symbol] : currentPrices.stocks[symbol];
+
+if (typeof price !== 'number' || isNaN(price)) {
+  alert(`Error: Could not find price for ${symbol} (${assetType})`);
+  return;
+}
+
   document.getElementById('marketInfoTitle').textContent = `${name} (${sym})`;
   document.getElementById('marketDetails').innerHTML = `
     <p>Price: $${price.toFixed(2)}</p><p>Type: ${type}</p>`;
