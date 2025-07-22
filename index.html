@@ -1195,6 +1195,32 @@
                 });
             });
         });
+
+        function loadFromStorage() {
+    const saved = localStorage.getItem('simulatorData');
+    if (!saved) return;
+
+    try {
+        const data = JSON.parse(saved);
+        if (data.userBalance !== undefined) userBalance = data.userBalance;
+        if (data.cryptoHoldings) cryptoHoldings = data.cryptoHoldings;
+        if (data.stockHoldings) stockHoldings = data.stockHoldings;
+        if (data.createdCoins) createdCoins = data.createdCoins;
+    } catch (e) {
+        console.error("Failed to parse localStorage data:", e);
+    }
+}
+function saveToStorage() {
+    const data = {
+        userBalance,
+        cryptoHoldings,
+        stockHoldings,
+        createdCoins
+    };
+    localStorage.setItem('simulatorData', JSON.stringify(data));
+}
+loadFromStorage();
+
         
         // Update balance display
         function updateBalance() {
@@ -1247,6 +1273,8 @@
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2 
             });
+
+             saveToStorage();
         }
         
         // Show notification
