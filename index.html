@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetaWealth - Ultimate Crypto & Trading Simulator</title>
+    <style>
+        :root {
+            --primary: #6e48aa;
+            --secondary: #9d50bb;
+            --dark: #1a1a2e;
+            --darker: #16213e;
+            --light: #f1f1f1;
+            --success: #4caf50;
+            --danger: #f44336;
+            --warning: #ff9800;
+            --info: #2196f3;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--dark);
+            color: var(--light);
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--darker), var(--dark));
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .balance {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        nav {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: var(--light);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .nav-btn:hover, .nav-btn.active {
+            background: var(--primary);
+            transform: translateY(-2px);
+        }
+        
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-color: var(--primary);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .card-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .card-change {
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .positive {
+            color: var(--success);
+        }
+        
+        .negative {
+            color: var(--danger);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 5px 0;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        th {
+            background: rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: 16px;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-content {
+            background: var(--darker);
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .close-modal:hover {
+            color: white;
+        }
+        
+        .modal-title {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: var(--primary);
+        }
+        
+        .chart-container {
+            width: 100%;
+            height: 300px;
+            margin: 20px 0;
+        }
+        
+        .coin-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .coin-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .coin-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border-color: var(--primary);
+        }
+        
+        .coin-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .coin-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .coin-price {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .coin-change {
+            font-size: 14px;
+        }
+        
+        .casino-game {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .casino-game:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-color: var(--primary);
+        }
+        
+        .game-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .game-description {
+            margin-bottom: 15px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .slots-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .slot {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .bet-controls {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .bet-amount {
+            flex: 1;
+        }
+        
+        .roulette-wheel {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(90deg, red, black, red, black, red, black, red, black, red, black);
+            margin: 20px auto;
+            position: relative;
+            animation: spin 5s linear infinite;
+            transform: rotate(0deg);
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .roulette-ball {
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .stock-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .stock-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border-color: var(--primary);
+        }
+        
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .stock-name {
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        .stock-price {
+            font-weight: bold;
+        }
+        
+        .stock-change {
+            font-size: 14px;
+        }
+        
+        .progress-bar {
+            height: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            background: var(--success);
+        }
+        
+        .notification.error {
+            background: var(--danger);
+        }
+        
+        .notification.warning {
+            background: var(--warning);
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            nav {
+                flex-wrap: wrap;
+            }
+            
+            .coin-list {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">MetaWealth</div>
+            <div class="user-info">
+                <div class="balance">$<span id="userBalance">10,000.00</span></div>
+                <div class="avatar" id="userAvatar">U</div>
+            </div>
+        </header>
+        
+        <nav>
+            <button class="nav-btn active" data-section="dashboard">Dashboard</button>
+            <button class="nav-btn" data-section="crypto">Crypto Market</button>
+            <button class="nav-btn" data-section="stocks">Stock Market</button>
+            <button class="nav-btn" data-section="casino">Casino</button>
+            <button class="nav-btn" data-section="create">Create Coin</button>
+            <button class="nav-btn" data-section="portfolio">Portfolio</button>
+        </nav>
+        
+        <!-- Dashboard Section -->
+        <section class="section active" id="dashboard">
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Total Balance</div>
+                        <div class="card-change positive">+2.5%</div>
+                    </div>
+                    <div class="card-value">$<span id="totalBalance">12,345.67</span></div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 65%;"></div>
+                    </div>
+                    <button class="btn btn-secondary">View Details</button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Crypto Holdings</div>
+                        <div class="card-change positive">+5.2%</div>
+                    </div>
+                    <div class="card-value">$<span id="cryptoBalance">4,567.89</span></div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 35%;"></div>
+                    </div>
+                    <button class="btn btn-secondary">View Portfolio</button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Stock Holdings</div>
+                        <div class="card-change negative">-1.3%</div>
+                    </div>
+                    <div class="card-value">$<span id="stockBalance">3,210.45</span></div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 25%;"></div>
+                    </div>
+                    <button class="btn btn-secondary">View Portfolio</button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Today's Profit</div>
+                        <div class="card-change positive">+$234.56</div>
+                    </div>
+                    <div class="card-value">$<span id="dailyProfit">234.56</span></div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 45%;"></div>
+                    </div>
+                    <button class="btn btn-secondary">View History</button>
+                </div>
+            </div>
+            
+            <h2>Market Overview</h2>
+            <div class="chart-container" id="marketChart">
+                <!-- Chart will be rendered here -->
+                <div style="display: flex; justify-content: center; align-items: center; height: 100%; background: rgba(255,255,255,0.05); border-radius: 10px;">
+                    <p>Market Chart Visualization</p>
+                </div>
+            </div>
+            
+            <h2>Top Movers</h2>
+            <div class="coin-list">
+                <div class="coin-item">
+                    <div class="coin-logo">B</div>
+                    <div class="coin-name">Bitcoin</div>
+                    <div class="coin-price">$42,567.89</div>
+                    <div class="coin-change positive">+3.2%</div>
+                </div>
+                <div class="coin-item">
+                    <div class="coin-logo">E</div>
+                    <div class="coin-name">Ethereum</div>
+                    <div class="coin-price">$2,345.67</div>
+                    <div class="coin-change positive">+5.7%</div>
+                </div>
+                <div class="coin-item">
+                    <div class="coin-logo">S</div>
+                    <div class="coin-name">Solana</div>
+                    <div class="coin-price">$123.45</div>
+                    <div class="coin-change negative">-2.1%</div>
+                </div>
+                <div class="coin-item">
+                    <div class="coin-logo">A</div>
+                    <div class="coin-name">Apple</div>
+                    <div class="coin-price">$178.34</div>
+                    <div class="coin-change positive">+1.2%</div>
+                </div>
+                <div class="coin-item">
+                    <div class="coin-logo">T</div>
+                    <div class="coin-name">Tesla</div>
+                    <div class="coin-price">$876.54</div>
+                    <div class="coin-change negative">-3.4%</div>
+                </div>
+                <div class="coin-item">
+                    <div class="coin-logo">G</div>
+                    <div class="coin-name">Google</div>
+                    <div class="coin-price">$2,789.01</div>
+                    <div class="coin-change positive">+0.8%</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Crypto Market Section -->
+        <section class="section" id="crypto">
+            <h2>Crypto Market</h2>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <input type="text" placeholder="Search cryptocurrencies..." style="flex: 1;">
+                <button class="btn btn-primary">Search</button>
+                <button class="btn btn-secondary">Filter</button>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>24h Change</th>
+                        <th>Market Cap</th>
+                        <th>Volume</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div class="coin-logo">B</div>
+                                <div>Bitcoin (BTC)</div>
+                            </div>
+                        </td>
+                        <td>$42,567.89</td>
+                        <td class="positive">+3.2%</td>
+                        <td>$812.4B</td>
+                        <td>$24.5B</td>
+                        <td>
+                            <button class="btn btn-primary" style="padding: 5px 10px; font-size: 14px;">Trade</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div class="coin-logo">E</div>
+                                <div>Ethereum (ETH)</div>
+                            </div>
+                        </td>
+                        <td>$2,345.67</td>
+                        <td class="positive">+5.7%</td>
+                        <td>$281.2B</td>
+                        <td>$12.3B</td>
+                        <td>
+                            <button class="btn btn-primary" style="padding: 5px 10px; font-size: 14px;">Trade</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div class="coin-logo">S</div>
+                                <div>Solana (SOL)</div>
+                            </div>
+                        </td>
+                        <td>$123.45</td>
+                        <td class="negative">-2.1%</td>
+                        <td>$52.8B</td>
+                        <td>$2.4B</td>
+                        <td>
+                            <button class="btn btn-primary" style="padding: 5px 10px; font-size: 14px;">Trade</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div class="coin-logo">A</div>
+                                <div>Avalanche (AVAX)</div>
+                            </div>
+                        </td>
+                        <td>$34.56</td>
+                        <td class="positive">+1.8%</td>
+                        <td>$12.9B</td>
+                        <td>$456.7M</td>
+                        <td>
+                            <button class="btn btn-primary" style="padding: 5px 10px; font-size: 14px;">Trade</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div class="coin-logo">D</div>
+                                <div>Dogecoin (DOGE)</div>
+                            </div>
+                        </td>
+                        <td>$0.0876</td>
+                        <td class="negative">-0.5%</td>
+                        <td>$12.3B</td>
+                        <td>$345.6M</td>
+                        <td>
+                            <button class="btn btn-primary" style="padding: 5px 10px; font-size: 14px;">Trade</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div id="cryptoModal" class="modal">
+                <div class="modal-content">
+                    <span class="close-modal">&times;</span>
+                    <h3 class="modal-title">Trade Bitcoin (BTC)</h3>
+                    <div class="form-group">
+                        <label>Action</label>
+                        <select id="tradeAction">
+                            <option value="buy">Buy</option>
+                            <option value="sell">Sell</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount (BTC)</label>
+                        <input type="number" id="tradeAmount" placeholder="0.00" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Price per BTC</label>
+                        <input type="text" id="tradePrice" value="$42,567.89" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Total Cost</label>
+                        <input type="text" id="tradeTotal" value="$0.00" readonly>
+                    </div>
+                    <button class="btn btn-primary" id="confirmTrade">Confirm Trade</button>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Stock Market Section -->
+        <section class="section" id="stocks">
+            <h2>Stock Market</h2>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <input type="text" placeholder="Search stocks..." style="flex: 1;">
+                <button class="btn btn-primary">Search</button>
+                <button class="btn btn-secondary">Filter</button>
+            </div>
+            
+            <div class="stock-card">
+                <div class="stock-header">
+                    <div class="stock-name">Apple Inc. (AAPL)</div>
+                    <div class="stock-price">$178.34</div>
+                </div>
+                <div class="stock-change positive">+1.2% ($2.12)</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 65%;"></div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="btn btn-primary" style="flex: 1;">Buy</button>
+                    <button class="btn btn-secondary" style="flex: 1;">Sell</button>
+                </div>
+            </div>
+            
+            <div class="stock-card">
+                <div class="stock-header">
+                    <div class="stock-name">Tesla Inc. (TSLA)</div>
+                    <div class="stock-price">$876.54</div>
+                </div>
+                <div class="stock-change negative">-3.4% ($30.87)</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 45%;"></div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="btn btn-primary" style="flex: 1;">Buy</button>
+                    <button class="btn btn-secondary" style="flex: 1;">Sell</button>
+                </div>
+            </div>
+            
+            <div class="stock-card">
+                <div class="stock-header">
+                    <div class="stock-name">Google (GOOGL)</div>
+                    <div class="stock-price">$2,789.01</div>
+                </div>
+                <div class="stock-change positive">+0.8% ($22.31)</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 75%;"></div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="btn btn-primary" style="flex: 1;">Buy</button>
+                    <button class="btn btn-secondary" style="flex: 1;">Sell</button>
+                </div>
+            </div>
+            
+            <div class="stock-card">
+                <div class="stock-header">
+                    <div class="stock-name">Amazon.com Inc. (AMZN)</div>
+                    <div class="stock-price">$3,456.78</div>
+                </div>
+                <div class="stock-change positive">+2.1% ($71.23)</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 55%;"></div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="btn btn-primary" style="flex: 1;">Buy</button>
+                    <button class="btn btn-secondary" style="flex: 1;">Sell</button>
+                </div>
+            </div>
+            
+            <div id="stockModal" class="modal">
+                <div class="modal-content">
+                    <span class="close-modal">&times;</span>
+                    <h3 class="modal-title">Trade Apple (AAPL)</h3>
+                    <div class="form-group">
+                        <label>Action</label>
+                        <select id="stockAction">
+                            <option value="buy">Buy</option>
+                            <option value="sell">Sell</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Shares</label>
+                        <input type="number" id="stockShares" placeholder="0" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Price per Share</label>
+                        <input type="text" id="stockPrice" value="$178.34" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Total Cost</label>
+                        <input type="text" id="stockTotal" value="$0.00" readonly>
+                    </div>
+                    <button class="btn btn-primary" id="confirmStockTrade">Confirm Trade</button>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Casino Section -->
+        <section class="section" id="casino">
+            <h2>Casino Games</h2>
+            
+            <div class="casino-game">
+                <h3 class="game-title">Slots</h3>
+                <p class="game-description">Spin the reels and match symbols to win big!</p>
+                
+                <div class="slots-container">
+                    <div class="slot" id="slot1">7</div>
+                    <div class="slot" id="slot2">7</div>
+                    <div class="slot" id="slot3">7</div>
+                </div>
+                
+                <div class="bet-controls">
+                    <input type="number" class="bet-amount" placeholder="Bet amount" value="10">
+                    <button class="btn btn-primary" id="spinBtn">Spin ($10)</button>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <p>Last win: <span id="lastWin">$0</span></p>
+                </div>
+            </div>
+            
+            <div class="casino-game">
+                <h3 class="game-title">Roulette</h3>
+                <p class="game-description">Bet on red, black, or a specific number for big payouts!</p>
+                
+                <div class="roulette-wheel">
+                    <div class="roulette-ball"></div>
+                </div>
+                
+                <div class="bet-controls">
+                    <input type="number" class="bet-amount" placeholder="Bet amount" value="10">
+                    <select style="flex: 1;">
+                        <option>Red (2x)</option>
+                        <option>Black (2x)</option>
+                        <option>Green (14x)</option>
+                        <option>Number (36x)</option>
+                    </select>
+                    <button class="btn btn-primary">Bet</button>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <p>Last win: <span id="lastRouletteWin">$0</span></p>
+                </div>
+            </div>
+            
+            <div class="casino-game">
+                <h3 class="game-title">Coin Flip</h3>
+                <p class="game-description">Simple 50/50 chance to double your bet!</p>
+                
+                <div style="display: flex; justify-content: center; margin: 20px 0;">
+                    <div style="width: 100px; height: 100px; background: #f1c40f; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;" id="coinResult">
+                        ?
+                    </div>
+                </div>
+                
+                <div class="bet-controls">
+                    <input type="number" class="bet-amount" placeholder="Bet amount" value="10">
+                    <button class="btn btn-primary" style="flex: 1;">Heads (2x)</button>
+                    <button class="btn btn-primary" style="flex: 1;">Tails (2x)</button>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <p>Last win: <span id="lastCoinWin">$0</span></p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Create Coin Section -->
+        <section class="section" id="create">
+            <h2>Create Your Own Cryptocurrency</h2>
+            
+            <div class="card" style="max-width: 600px; margin: 0 auto;">
+                <div class="form-group">
+                    <label>Coin Name</label>
+                    <input type="text" id="coinName" placeholder="e.g. MetaCoin">
+                </div>
+                
+                <div class="form-group">
+                    <label>Coin Symbol</label>
+                    <input type="text" id="coinSymbol" placeholder="e.g. MTC" maxlength="5">
+                </div>
+                
+                <div class="form-group">
+                    <label>Initial Supply</label>
+                    <input type="number" id="coinSupply" placeholder="e.g. 1000000" value="1000000">
+                </div>
+                
+                <div class="form-group">
+                    <label>Initial Price (USD)</label>
+                    <input type="number" id="coinPrice" placeholder="e.g. 0.10" step="0.01" value="0.10">
+                </div>
+                
+                <div class="form-group">
+                    <label>Coin Description</label>
+                    <textarea style="width: 100%; padding: 12px; border-radius: 5px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.05); color: white; font-size: 16px; min-height: 100px;" placeholder="Describe your cryptocurrency..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Coin Logo (URL)</label>
+                    <input type="text" id="coinLogo" placeholder="https://example.com/logo.png">
+                </div>
+                
+                <button class="btn btn-primary" id="createCoinBtn">Create Coin ($100 fee)</button>
+            </div>
+            
+            <h2 style="margin-top: 40px;">Your Created Coins</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Symbol</th>
+                        <th>Price</th>
+                        <th>Market Cap</th>
+                        <th>Supply</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div class="coin-logo">M</div>
+                                <div>MyFirstCoin (MFC)</div>
+                            </div>
+                        </td>
+                        <td>$0.25</td>
+                        <td class="positive">+150%</td>
+                        <td>$250,000</td>
+                        <td>1,000,000</td>
+                        <td>
+                            <button class="btn btn-primary" style="padding: 5px 10px; font-size: 14px;">Manage</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        
+        <!-- Portfolio Section -->
+        <section class="section" id="portfolio">
+            <h2>Your Portfolio</h2>
+            
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Crypto Holdings</div>
+                    </div>
+                    <div class="card-value">$<span id="portfolioCrypto">4,567.89</span></div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 65%;"></div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Stock Holdings</div>
+                    </div>
+                    <div class="card-value">$<span id="portfolioStocks">3,210.45</span></div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 35%;"></div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Cash Balance</div>
+                    </div>
+                    <div class="card-value">$<span id="portfolioCash">4,567.33</span></div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 45%;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <h3>Crypto Assets</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Asset</th>
+                        <th>Amount</th>
+                        <th>Value</th>
+                        <th>Avg Buy Price</th>
+                        <th>Profit/Loss</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div class="coin-logo">B</div>
+                                <div>Bitcoin (BTC)</div>
+                            </div>
+                        </td>
+                        <td>0.125</td>
+                        <td>$5,320.98</td>
+                        <td>$38,456.78</td>
+                        <td class="positive">+$1,234.56 (23.2%)</td>
+                        <td>
+                            <button class="btn btn-primary" style="padding: 5px 10px; font-size: 14px;">Trade</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div class="coin-logo">E</div>
+                                <div>Ethereum (ETH)</div>
+                            </div>
+                        </td>
+                        <td>2.5</td>
+                        <td>$5,864.25</td>
+                        <td>$2,123.45</td>
+                        <td class="positive">+$555.55 (10.5%)</td>
+                        <td>
+                            <button class="btn btn-primary" style="padding: 5px 10px; font-size: 14px;">Trade</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3 style="margin-top: 30px;">Stock Assets</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Asset</th>
+                        <th>Shares</th>
+                        <th>Value</th>
+                        <th>Avg Buy Price</th>
+                        <th>Profit/Loss</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div class="coin-logo">A</div>
+                                <div>Apple (AAPL)</div>
+                            </div>
+                        </td>
+                        <td>10</td>
+                        <td>$1,783.40</td>
+                        <td>$165.43</td>
+                        <td class="positive">+$129.10 (7.8%)</td>
+                        <td>
+                            <button class="btn btn-primary" style="padding: 5px 10px; font-size: 14px;">Trade</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div class="coin-logo">T</div>
+                                <div>Tesla (TSLA)</div>
+                            </div>
+                        </td>
+                        <td>2</td>
+                        <td>$1,753.08</td>
+                        <td>$876.54</td>
+                        <td class="negative">-$0.00 (0.0%)</td>
+                        <td>
+                            <button class="btn btn-primary" style="padding: 5px 10px; font-size: 14px;">Trade</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+    
+    <div class="notification" id="notification">This is a notification</div>
+    
+    <script>
+        // Global variables
+        let userBalance = 10000.00;
+        let cryptoHoldings = {
+            'BTC': { amount: 0.125, avgPrice: 38456.78 },
+            'ETH': { amount: 2.5, avgPrice: 2123.45 }
+        };
+        let stockHoldings = {
+            'AAPL': { shares: 10, avgPrice: 165.43 },
+            'TSLA': { shares: 2, avgPrice: 876.54 }
+        };
+        let createdCoins = [
+            { name: 'MyFirstCoin', symbol: 'MFC', price: 0.25, supply: 1000000, change: 150 }
+        ];
+        
+        // Current prices (simulated)
+        const currentPrices = {
+            crypto: {
+                'BTC': 42567.89,
+                'ETH': 2345.67,
+                'SOL': 123.45,
+                'AVAX': 34.56,
+                'DOGE': 0.0876
+            },
+            stocks: {
+                'AAPL': 178.34,
+                'TSLA': 876.54,
+                'GOOGL': 2789.01,
+                'AMZN': 3456.78
+            }
+        };
+        
+        // DOM elements
+        const navButtons = document.querySelectorAll('.nav-btn');
+        const sections = document.querySelectorAll('.section');
+        const userBalanceEl = document.getElementById('userBalance');
+        const notificationEl = document.getElementById('notification');
+        
+        // Navigation
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const sectionId = button.getAttribute('data-section');
+                
+                // Update active button
+                navButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                // Show corresponding section
+                sections.forEach(section => {
+                    section.classList.remove('active');
+                    if (section.id === sectionId) {
+                        section.classList.add('active');
+                    }
+                });
+            });
+        });
+        
+        // Update balance display
+        function updateBalance() {
+            userBalanceEl.textContent = userBalance.toLocaleString('en-US', { 
+                style: 'decimal', 
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2 
+            });
+            
+            // Calculate total portfolio value
+            let cryptoValue = 0;
+            for (const [symbol, holding] of Object.entries(cryptoHoldings)) {
+                cryptoValue += holding.amount * currentPrices.crypto[symbol];
+            }
+            
+            let stockValue = 0;
+            for (const [symbol, holding] of Object.entries(stockHoldings)) {
+                stockValue += holding.shares * currentPrices.stocks[symbol];
+            }
+            
+            const totalValue = cryptoValue + stockValue + userBalance;
+            
+            // Update portfolio displays
+            document.getElementById('totalBalance').textContent = totalValue.toLocaleString('en-US', { 
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2 
+            });
+            
+            document.getElementById('cryptoBalance').textContent = cryptoValue.toLocaleString('en-US', { 
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2 
+            });
+            
+            document.getElementById('stockBalance').textContent = stockValue.toLocaleString('en-US', { 
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2 
+            });
+            
+            document.getElementById('portfolioCrypto').textContent = cryptoValue.toLocaleString('en-US', { 
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2 
+            });
+            
+            document.getElementById('portfolioStocks').textContent = stockValue.toLocaleString('en-US', { 
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2 
+            });
+            
+            document.getElementById('portfolioCash').textContent = userBalance.toLocaleString('en-US', { 
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2 
+            });
+        }
+        
+        // Show notification
+        function showNotification(message, type = 'info', duration = 3000) {
+            notificationEl.textContent = message;
+            notificationEl.className = 'notification';
+            notificationEl.classList.add(type);
+            notificationEl.classList.add('show');
+            
+            setTimeout(() => {
+                notificationEl.classList.remove('show');
+            }, duration);
+        }
+        
+        // Crypto trade functionality
+        document.querySelectorAll('button:contains("Trade")').forEach(button => {
+            button.addEventListener('click', function() {
+                const row = this.closest('tr');
+                const coinName = row.querySelector('td:first-child div:nth-child(2)').textContent.split(' (')[0];
+                const coinSymbol = row.querySelector('td:first-child div:nth-child(2)').textContent.match(/\(([^)]+)\)/)[1];
+                const coinPrice = parseFloat(row.querySelector('td:nth-child(2)').textContent.replace('$', '').replace(',', ''));
+                
+                document.getElementById('tradePrice').value = `$${coinPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                document.querySelector('.modal-title').textContent = `Trade ${coinName} (${coinSymbol})`;
+                
+                document.getElementById('cryptoModal').style.display = 'flex';
+            });
+        });
+        
+        // Close modals
+        document.querySelectorAll('.close-modal').forEach(button => {
+            button.addEventListener('click', function() {
+                this.closest('.modal').style.display = 'none';
+            });
+        });
+        
+        // Calculate trade total
+        document.getElementById('tradeAmount').addEventListener('input', function() {
+            const amount = parseFloat(this.value) || 0;
+            const price = parseFloat(document.getElementById('tradePrice').value.replace('$', '').replace(',', ''));
+            const total = amount * price;
+            
+            document.getElementById('tradeTotal').value = `$${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        });
+        
+        // Confirm crypto trade
+        document.getElementById('confirmTrade').addEventListener('click', function() {
+            const action = document.getElementById('tradeAction').value;
+            const amount = parseFloat(document.getElementById('tradeAmount').value);
+            const price = parseFloat(document.getElementById('tradePrice').value.replace('$', '').replace(',', ''));
+            const total = amount * price;
+            const coinSymbol = document.querySelector('.modal-title').textContent.match(/\(([^)]+)\)/)[1];
+            
+            if (isNaN(amount) || amount <= 0) {
+                showNotification('Please enter a valid amount', 'error');
+                return;
+            }
+            
+            if (action === 'buy') {
+                if (total > userBalance) {
+                    showNotification('Insufficient funds', 'error');
+                    return;
+                }
+                
+                userBalance -= total;
+                
+                if (!cryptoHoldings[coinSymbol]) {
+                    cryptoHoldings[coinSymbol] = { amount: 0, avgPrice: 0 };
+                }
+                
+                // Calculate new average price
+                const currentValue = cryptoHoldings[coinSymbol].amount * cryptoHoldings[coinSymbol].avgPrice;
+                const newValue = currentValue + total;
+                const newAmount = cryptoHoldings[coinSymbol].amount + amount;
+                cryptoHoldings[coinSymbol].avgPrice = newValue / newAmount;
+                cryptoHoldings[coinSymbol].amount = newAmount;
+                
+                showNotification(`Successfully bought ${amount} ${coinSymbol} for $${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'success');
+            } else {
+                if (!cryptoHoldings[coinSymbol] || cryptoHoldings[coinSymbol].amount < amount) {
+                    showNotification(`You don't have enough ${coinSymbol} to sell`, 'error');
+                    return;
+                }
+                
+                userBalance += total;
+                cryptoHoldings[coinSymbol].amount -= amount;
+                
+                if (cryptoHoldings[coinSymbol].amount === 0) {
+                    delete cryptoHoldings[coinSymbol];
+                }
+                
+                showNotification(`Successfully sold ${amount} ${coinSymbol} for $${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'success');
+            }
+            
+            updateBalance();
+            document.getElementById('cryptoModal').style.display = 'none';
+        });
+        
+        // Stock trade functionality
+        document.querySelectorAll('.stock-card button:first-child').forEach(button => {
+            button.addEventListener('click', function() {
+                const card = this.closest('.stock-card');
+                const stockName = card.querySelector('.stock-name').textContent;
+                const stockSymbol = stockName.match(/\(([^)]+)\)/)[1];
+                const stockPrice = parseFloat(card.querySelector('.stock-price').textContent.replace('$', '').replace(',', ''));
+                
+                document.getElementById('stockPrice').value = `$${stockPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                document.querySelector('#stockModal .modal-title').textContent = `Trade ${stockName}`;
+                document.getElementById('stockAction').value = 'buy';
+                
+                document.getElementById('stockModal').style.display = 'flex';
+            });
+        });
+        
+        document.querySelectorAll('.stock-card button:last-child').forEach(button => {
+            button.addEventListener('click', function() {
+                const card = this.closest('.stock-card');
+                const stockName = card.querySelector('.stock-name').textContent;
+                const stockSymbol = stockName.match(/\(([^)]+)\)/)[1];
+                const stockPrice = parseFloat(card.querySelector('.stock-price').textContent.replace('$', '').replace(',', ''));
+                
+                document.getElementById('stockPrice').value = `$${stockPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                document.querySelector('#stockModal .modal-title').textContent = `Trade ${stockName}`;
+                document.getElementById('stockAction').value = 'sell';
+                
+                document.getElementById('stockModal').style.display = 'flex';
+            });
+        });
+        
+        // Calculate stock trade total
+        document.getElementById('stockShares').addEventListener('input', function() {
+            const shares = parseInt(this.value) || 0;
+            const price = parseFloat(document.getElementById('stockPrice').value.replace('$', '').replace(',', ''));
+            const total = shares * price;
+            
+            document.getElementById('stockTotal').value = `$${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        });
+        
+        // Confirm stock trade
+        document.getElementById('confirmStockTrade').addEventListener('click', function() {
+            const action = document.getElementById('stockAction').value;
+            const shares = parseInt(document.getElementById('stockShares').value);
+            const price = parseFloat(document.getElementById('stockPrice').value.replace('$', '').replace(',', ''));
+            const total = shares * price;
+            const stockName = document.querySelector('#stockModal .modal-title').textContent.replace('Trade ', '');
+            const stockSymbol = stockName.match(/\(([^)]+)\)/)[1];
+            
+            if (isNaN(shares) || shares <= 0) {
+                showNotification('Please enter a valid number of shares', 'error');
+                return;
+            }
+            
+            if (action === 'buy') {
+                if (total > userBalance) {
+                    showNotification('Insufficient funds', 'error');
+                    return;
+                }
+                
+                userBalance -= total;
+                
+                if (!stockHoldings[stockSymbol]) {
+                    stockHoldings[stockSymbol] = { shares: 0, avgPrice: 0 };
+                }
+                
+                // Calculate new average price
+                const currentValue = stockHoldings[stockSymbol].shares * stockHoldings[stockSymbol].avgPrice;
+                const newValue = currentValue + total;
+                const newShares = stockHoldings[stockSymbol].shares + shares;
+                stockHoldings[stockSymbol].avgPrice = newValue / newShares;
+                stockHoldings[stockSymbol].shares = newShares;
+                
+                showNotification(`Successfully bought ${shares} shares of ${stockSymbol} for $${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'success');
+            } else {
+                if (!stockHoldings[stockSymbol] || stockHoldings[stockSymbol].shares < shares) {
+                    showNotification(`You don't have enough shares of ${stockSymbol} to sell`, 'error');
+                    return;
+                }
+                
+                userBalance += total;
+                stockHoldings[stockSymbol].shares -= shares;
+                
+                if (stockHoldings[stockSymbol].shares === 0) {
+                    delete stockHoldings[stockSymbol];
+                }
+                
+                showNotification(`Successfully sold ${shares} shares of ${stockSymbol} for $${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'success');
+            }
+            
+            updateBalance();
+            document.getElementById('stockModal').style.display = 'none';
+        });
+        
+        // Slots game
+        const slotIcons = ['7', '🍒', '🍋', '🍊', '🍇', '🍉', '💰', '💎'];
+        let spinning = false;
+        
+        document.getElementById('spinBtn').addEventListener('click', function() {
+            if (spinning) return;
+            
+            const betAmount = parseFloat(document.querySelector('#casino .bet-amount').value);
+            
+            if (isNaN(betAmount) || betAmount <= 0) {
+                showNotification('Please enter a valid bet amount', 'error');
+                return;
+            }
+            
+            if (betAmount > userBalance) {
+                showNotification('Insufficient funds', 'error');
+                return;
+            }
+            
+            userBalance -= betAmount;
+            updateBalance();
+            spinning = true;
+            
+            const slots = [
+                document.getElementById('slot1'),
+                document.getElementById('slot2'),
+                document.getElementById('slot3')
+            ];
+            
+            let spins = 0;
+            const totalSpins = 20;
+            const spinInterval = setInterval(() => {
+                slots.forEach(slot => {
+                    const randomIcon = slotIcons[Math.floor(Math.random() * slotIcons.length)];
+                    slot.textContent = randomIcon;
+                });
+                
+                spins++;
+                if (spins >= totalSpins) {
+                    clearInterval(spinInterval);
+                    
+                    // Determine win
+                    const results = slots.map(slot => slot.textContent);
+                    let winMultiplier = 0;
+                    
+                    // Check for three matching symbols
+                    if (results[0] === results[1] && results[1] === results[2]) {
+                        if (results[0] === '7') winMultiplier = 10;
+                        else if (results[0] === '💎') winMultiplier = 8;
+                        else if (results[0] === '💰') winMultiplier = 6;
+                        else winMultiplier = 4;
+                    }
+                    // Check for two matching symbols
+                    else if (results[0] === results[1] || results[1] === results[2] || results[0] === results[2]) {
+                        winMultiplier = 2;
+                    }
+                    
+                    if (winMultiplier > 0) {
+                        const winAmount = betAmount * winMultiplier;
+                        userBalance += winAmount;
+                        document.getElementById('lastWin').textContent = `$${winAmount.toFixed(2)}`;
+                        showNotification(`You won $${winAmount.toFixed(2)}!`, 'success');
+                    } else {
+                        document.getElementById('lastWin').textContent = '$0';
+                        showNotification('No win this time. Try again!', 'warning');
+                    }
+                    
+                    updateBalance();
+                    spinning = false;
+                }
+            }, 100);
+        });
+        
+        // Create coin functionality
+        document.getElementById('createCoinBtn').addEventListener('click', function() {
+            const name = document.getElementById('coinName').value.trim();
+            const symbol = document.getElementById('coinSymbol').value.trim().toUpperCase();
+            const supply = parseInt(document.getElementById('coinSupply').value);
+            const price = parseFloat(document.getElementById('coinPrice').value);
+            const fee = 100;
+            
+            if (!name || !symbol || isNaN(supply) || isNaN(price)) {
+                showNotification('Please fill all fields with valid values', 'error');
+                return;
+            }
+            
+            if (symbol.length < 2 || symbol.length > 5) {
+                showNotification('Symbol must be 2-5 characters', 'error');
+                return;
+            }
+            
+            if (supply <= 0) {
+                showNotification('Supply must be positive', 'error');
+                return;
+            }
+            
+            if (price <= 0) {
+                showNotification('Price must be positive', 'error');
+                return;
+            }
+            
+            if (userBalance < fee) {
+                showNotification(`You need $${fee} to create a coin`, 'error');
+                return;
+            }
+            
+            // Check if symbol already exists
+            if (createdCoins.some(coin => coin.symbol === symbol)) {
+                showNotification('A coin with this symbol already exists', 'error');
+                return;
+            }
+            
+            userBalance -= fee;
+            const newCoin = {
+                name,
+                symbol,
+                price,
+                supply,
+                change: 0
+            };
+            
+            createdCoins.push(newCoin);
+            
+            // Add to crypto market
+            currentPrices.crypto[symbol] = price;
+            
+            // Add to user's portfolio
+            cryptoHoldings[symbol] = {
+                amount: supply * 0.1, // Creator gets 10% of supply
+                avgPrice: price
+            };
+            
+            showNotification(`Successfully created ${name} (${symbol})! You received 10% of the supply.`, 'success');
+            updateBalance();
+            
+            // Update created coins table
+            const tableBody = document.querySelector('#create table tbody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div class="coin-logo">${symbol[0]}</div>
+                        <div>${name} (${symbol})</div>
+                    </div>
+                </td>
+                <td>$${price.toFixed(2)}</td>
+                <td class="positive">+0%</td>
+                <td>$${(supply * price).toLocaleString()}</td>
+                <td>${supply.toLocaleString()}</td>
+                <td>
+                    <button class="btn btn-primary" style="padding: 5px 10px; font-size: 14px;">Manage</button>
+                </td>
+            `;
+            tableBody.appendChild(newRow);
+        });
+        
+        // Initialize
+        updateBalance();
+        
+        // Simulate price changes
+        setInterval(() => {
+            // Update crypto prices
+            for (const symbol in currentPrices.crypto) {
+                const change = (Math.random() - 0.5) * 0.1; // -5% to +5%
+                currentPrices.crypto[symbol] *= (1 + change);
+                
+                // Ensure price doesn't go below 0.0001
+                if (currentPrices.crypto[symbol] < 0.0001) {
+                    currentPrices.crypto[symbol] = 0.0001;
+                }
+            }
+            
+            // Update stock prices
+            for (const symbol in currentPrices.stocks) {
+                const change = (Math.random() - 0.5) * 0.05; // -2.5% to +2.5%
+                currentPrices.stocks[symbol] *= (1 + change);
+                
+                // Ensure price doesn't go below 0.01
+                if (currentPrices.stocks[symbol] < 0.01) {
+                    currentPrices.stocks[symbol] = 0.01;
+                }
+            }
+            
+            // Update created coins prices
+            createdCoins.forEach(coin => {
+                const change = (Math.random() - 0.45) * 0.2; // -9% to +11% (more volatile)
+                coin.price *= (1 + change);
+                coin.change = ((coin.price / parseFloat(document.getElementById('coinPrice').value) - 1) * 100;
+                
+                // Ensure price doesn't go below 0.000001
+                if (coin.price < 0.000001) {
+                    coin.price = 0.000001;
+                }
+                
+                // Update in crypto prices
+                currentPrices.crypto[coin.symbol] = coin.price;
+            });
+            
+            // Update UI (simplified - in a real app, you'd update specific elements)
+            updateBalance();
+            
+            // Show random notification about market movement
+            if (Math.random() > 0.7) {
+                const coins = Object.keys(currentPrices.crypto);
+                const randomCoin = coins[Math.floor(Math.random() * coins.length)];
+                const change = ((currentPrices.crypto[randomCoin] / (currentPrices.crypto[randomCoin] / (1 + (Math.random() - 0.5) * 0.1)) - 1) * 100;
+                
+                showNotification(`${randomCoin} is ${change > 0 ? 'up' : 'down'} ${Math.abs(change).toFixed(2)}% in the last hour`, 
+                               change > 0 ? 'success' : 'error');
+            }
+        }, 10000); // Update every 10 seconds
+    </script>
+</body>
+</html>
