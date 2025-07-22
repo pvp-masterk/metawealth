@@ -530,6 +530,8 @@
                 <div class="balance">$<span id="userBalance">10,000.00</span></div>
                 <div class="avatar" id="userAvatar">U</div>
             </div>
+            <p id="lastUpdateTime" style="opacity: 0.6; font-size: 14px;">Last update: Just now</p>
+
         </header>
         
         <nav>
@@ -540,6 +542,7 @@
             <button class="nav-btn" data-section="create">Create Coin</button>
             <button class="nav-btn" data-section="portfolio">Portfolio</button>
         </nav>
+        
         
         <!-- Dashboard Section -->
         <section class="section active" id="dashboard">
@@ -1276,6 +1279,52 @@ loadFromStorage();
 
              saveToStorage();
         }
+        function refreshMarketUI() {
+    // Crypto Market Table
+    document.querySelectorAll('#crypto tbody tr').forEach(row => {
+        const symbolText = row.querySelector('td div:nth-child(2)').textContent;
+        const symbol = symbolText.match(/\(([^)]+)\)/)[1];
+        const priceEl = row.children[1];
+        const changeEl = row.children[2];
+        
+        const oldPrice = parseFloat(priceEl.textContent.replace('$', '').replace(',', ''));
+        const newPrice = currentPrices.crypto[symbol];
+        const percentChange = ((newPrice - oldPrice) / oldPrice) * 100;
+
+        priceEl.textContent = `$${newPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        changeEl.textContent = `${percentChange >= 0 ? '+' : ''}${percentChange.toFixed(2)}%`;
+        changeEl.className = `coin-change ${percentChange >= 0 ? 'positive' : 'negative'}`;
+    });
+
+    // Stock Cards
+    document.querySelectorAll('.stock-card').forEach(card => {
+        const nameText = card.querySelector('.stock-name').textContent;
+        const symbol = nameText.match(/\(([^)]+)\)/)[1];
+        const priceEl = card.querySelector('.stock-price');
+        const oldPrice = parseFloat(priceEl.textContent.replace('$', '').replace(',', ''));
+        const newPrice = currentPrices.stocks[symbol];
+        const percentChange = ((newPrice - oldPrice) / oldPrice) * 100;
+
+        priceEl.textContent = `$${newPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        const changeEl = card.querySelector('.stock-change');
+        changeEl.textContent = `${percentChange >= 0 ? '+' : ''}${percentChange.toFixed(2)}% ($${Math.abs((newPrice - oldPrice)).toFixed(2)})`;
+        changeEl.className = `stock-change ${percentChange >= 0 ? 'positive' : 'negative'}`;
+    });
+
+    // Created Coins Table
+    const createdTable = document.querySelector('#create table tbody');
+    if (createdTable) {
+        Array.from(createdTable.children).forEach(row => {
+            const nameText = row.querySelector('td div:nth-child(2)').textContent;
+            const symbol = nameText.match(/\(([^)]+)\)/)[1];
+            const price = currentPrices.crypto[symbol];
+            row.children[1].textContent = `$${price.toFixed(2)}`;
+        });
+    }
+
+    updateBalance(); // Recalculate portfolio
+}
+
         
         // Show notification
         function showNotification(message, type = 'info', duration = 3000) {
@@ -1658,63 +1707,30 @@ loadFromStorage();
         // Initialize
         updateBalance();
         
-        // Simulate price changes
         setInterval(() => {
-            // Update crypto prices
-            for (const symbol in currentPrices.crypto) {
-                const change = (Math.random() - 0.5) * 0.01; // -0.5% to +0.5%
+    // Simulate price changes
+    for (const symbol in currentPrices.crypto) {
+        const change = (Math.random() - 0.5) * 0.02; // +/-1%
+        currentPrices.crypto[symbol] *= (1 + change);
+        currentPrices.crypto[symbol] = Math.max(currentPrices.crypto[symbol], 0.0001);
+    }
 
-                currentPrices.crypto[symbol] *= (1 + change);
-                
-                // Ensure price doesn't go below 0.0001
-                if (currentPrices.crypto[symbol] < 0.0001) {
-                    currentPrices.crypto[symbol] = 0.0001;
-                }
-            }
-            
-            // Update stock prices
-            for (const symbol in currentPrices.stocks) {
-                const change = (Math.random() - 0.5) * 0.01; // -0.5% to +0.5%
+    for (const symbol in currentPrices.stocks) {
+        const change = (Math.random() - 0.5) * 0.01; // +/-0.5%
+        currentPrices.stocks[symbol] *= (1 + change);
+        currentPrices.stocks[symbol] = Math.max(currentPrices.stocks[symbol], 0.01);
+    }
 
-                currentPrices.stocks[symbol] *= (1 + change);
-                
-                // Ensure price doesn't go below 0.01
-                if (currentPrices.stocks[symbol] < 0.01) {
-                    currentPrices.stocks[symbol] = 0.01;
-                }
-            }
-            
-            // Update created coins prices
-            createdCoins.forEach(coin => {
-                const change = (Math.random() - 0.5) * 0.01; // -0.5% to +0.5%
+    createdCoins.forEach(coin => {
+        const change = (Math.random() - 0.5) * 0.04;
+        coin.price *= (1 + change);
+        coin.price = Math.max(coin.price, 0.000001);
+        currentPrices.crypto[coin.symbol] = coin.price;
+    });
 
-                coin.price *= (1 + change);
-               coin.change = ((coin.price / parseFloat(document.getElementById('coinPrice').value)) - 1) * 100;
+    refreshMarketUI(); // ✅ Update UI Live
+}, 5000); // Every 5 seconds
 
-                
-                // Ensure price doesn't go below 0.000001
-                if (coin.price < 0.000001) {
-                    coin.price = 0.000001;
-                }
-                
-                // Update in crypto prices
-                currentPrices.crypto[coin.symbol] = coin.price;
-            });
-            
-            // Update UI (simplified - in a real app, you'd update specific elements)
-            updateBalance();
-            
-            // Show random notification about market movement
-            if (Math.random() > 0.7) {
-                const coins = Object.keys(currentPrices.crypto);
-                const randomCoin = coins[Math.floor(Math.random() * coins.length)];
-               const change = ((currentPrices.crypto[randomCoin] / (currentPrices.crypto[randomCoin] / (1 + (Math.random() - 0.5) * 0.1))) - 1) * 100;
-
-                
-                showNotification(`${randomCoin} is ${change > 0 ? 'up' : 'down'} ${Math.abs(change).toFixed(2)}% in the last hour`, 
-                               change > 0 ? 'success' : 'error');
-            }
-        }, 10000); // Update every 10 seconds
     </script>
 </body>
 </html>
