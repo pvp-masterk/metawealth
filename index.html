@@ -60,11 +60,20 @@
       <button id="marketSellBtn">Sell</button>
     </div>
   </div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@4.0.0/dist/chartjs-chart-treemap.min.js"></script>
+<!-- Chart.js Core -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<!-- Chart.js Treemap Plugin (v4) -->
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@4.2.1/dist/chartjs-chart-treemap.umd.min.js"></script>
+
 <script>
-  Chart.register(Chart.TreemapController, Chart.TreemapElement);
+  // Register Treemap plugin correctly
+  Chart.register(
+    window['chartjs-chart-treemap'].TreemapController,
+    window['chartjs-chart-treemap'].TreemapElement
+  );
 </script>
+
 
 <script>
   
@@ -266,7 +275,7 @@ function drawTreemap() {
         key: 'value',
         labels: {
           display: true,
-          align: 'center',
+          formatter: ctx => ctx.raw._data.label,
           color: 'black'
         },
         backgroundColor: () => `hsl(${Math.random() * 360}, 60%, 70%)`
@@ -280,6 +289,7 @@ function drawTreemap() {
     }
   });
 }
+
 
 
 // ====== HOPIUM ======
