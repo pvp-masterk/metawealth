@@ -963,6 +963,7 @@
                 
                 <div class="form-group">
                     <label>Coin Description</label>
+                    <textarea id="coinDescription" ... ></textarea>
                     <textarea style="width: 100%; padding: 12px; border-radius: 5px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.05); color: white; font-size: 16px; min-height: 100px;" placeholder="Describe your cryptocurrency..."></textarea>
                 </div>
                 
@@ -1261,19 +1262,22 @@
         }
         
         // Crypto trade functionality
-        document.querySelectorAll('button:contains("Trade")').forEach(button => {
-            button.addEventListener('click', function() {
-                const row = this.closest('tr');
-                const coinName = row.querySelector('td:first-child div:nth-child(2)').textContent.split(' (')[0];
-                const coinSymbol = row.querySelector('td:first-child div:nth-child(2)').textContent.match(/\(([^)]+)\)/)[1];
-                const coinPrice = parseFloat(row.querySelector('td:nth-child(2)').textContent.replace('$', '').replace(',', ''));
-                
-                document.getElementById('tradePrice').value = `$${coinPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                document.querySelector('.modal-title').textContent = `Trade ${coinName} (${coinSymbol})`;
-                
-                document.getElementById('cryptoModal').style.display = 'flex';
-            });
+        document.querySelectorAll('button.btn.btn-primary').forEach(button => {
+    if (button.textContent.trim() === "Trade") {
+        button.addEventListener('click', function() {
+            const row = this.closest('tr');
+            const coinText = row.querySelector('td div:nth-child(2)').textContent;
+            const coinName = coinText.split(' (')[0];
+            const coinSymbol = coinText.match(/\(([^)]+)\)/)[1];
+            const coinPrice = parseFloat(row.querySelector('td:nth-child(2)').textContent.replace('$', '').replace(',', ''));
+
+            document.getElementById('tradePrice').value = `$${coinPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.querySelector('.modal-title').textContent = `Trade ${coinName} (${coinSymbol})`;
+            document.getElementById('cryptoModal').style.display = 'flex';
         });
+    }
+});
+
         
         // Close modals
         document.querySelectorAll('.close-modal').forEach(button => {
@@ -1625,7 +1629,8 @@
             createdCoins.forEach(coin => {
                 const change = (Math.random() - 0.45) * 0.2; // -9% to +11% (more volatile)
                 coin.price *= (1 + change);
-                coin.change = ((coin.price / parseFloat(document.getElementById('coinPrice').value) - 1) * 100;
+               coin.change = ((coin.price / parseFloat(document.getElementById('coinPrice').value)) - 1) * 100;
+
                 
                 // Ensure price doesn't go below 0.000001
                 if (coin.price < 0.000001) {
@@ -1643,7 +1648,8 @@
             if (Math.random() > 0.7) {
                 const coins = Object.keys(currentPrices.crypto);
                 const randomCoin = coins[Math.floor(Math.random() * coins.length)];
-                const change = ((currentPrices.crypto[randomCoin] / (currentPrices.crypto[randomCoin] / (1 + (Math.random() - 0.5) * 0.1)) - 1) * 100;
+               const change = ((currentPrices.crypto[randomCoin] / (currentPrices.crypto[randomCoin] / (1 + (Math.random() - 0.5) * 0.1))) - 1) * 100;
+
                 
                 showNotification(`${randomCoin} is ${change > 0 ? 'up' : 'down'} ${Math.abs(change).toFixed(2)}% in the last hour`, 
                                change > 0 ? 'success' : 'error');
