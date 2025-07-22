@@ -1306,6 +1306,33 @@ loadFromStorage();
     }
 });
 
+        function adjustMarketPrice(symbol, type, assetType, amount) {
+    let currentPrice;
+    if (assetType === 'crypto') {
+        currentPrice = currentPrices.crypto[symbol];
+    } else {
+        currentPrice = currentPrices.stocks[symbol];
+    }
+
+    const percentChange = Math.min(0.05, amount / 10000); // Cap change at 5%
+
+    if (type === 'buy') {
+        currentPrice *= (1 + percentChange); // price goes up
+    } else if (type === 'sell') {
+        currentPrice *= (1 - percentChange); // price goes down
+    }
+
+    // Ensure price doesn't go below threshold
+    if (assetType === 'crypto' && currentPrice < 0.0001) currentPrice = 0.0001;
+    if (assetType === 'stocks' && currentPrice < 0.01) currentPrice = 0.01;
+
+    if (assetType === 'crypto') {
+        currentPrices.crypto[symbol] = currentPrice;
+    } else {
+        currentPrices.stocks[symbol] = currentPrice;
+    }
+}
+
         
         // Close modals
         document.querySelectorAll('.close-modal').forEach(button => {
@@ -1371,7 +1398,8 @@ loadFromStorage();
                 
                 showNotification(`Successfully sold ${amount} ${coinSymbol} for $${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'success');
             }
-            
+            adjustMarketPrice(coinSymbol, action, 'crypto', total);
+
             updateBalance();
             document.getElementById('cryptoModal').style.display = 'none';
         });
@@ -1465,7 +1493,8 @@ loadFromStorage();
                 
                 showNotification(`Successfully sold ${shares} shares of ${stockSymbol} for $${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'success');
             }
-            
+            adjustMarketPrice(stockSymbol, action, 'stocks', total);
+
             updateBalance();
             document.getElementById('stockModal').style.display = 'none';
         });
@@ -1633,7 +1662,8 @@ loadFromStorage();
         setInterval(() => {
             // Update crypto prices
             for (const symbol in currentPrices.crypto) {
-                const change = (Math.random() - 0.5) * 0.1; // -5% to +5%
+                const change = (Math.random() - 0.5) * 0.01; // -0.5% to +0.5%
+
                 currentPrices.crypto[symbol] *= (1 + change);
                 
                 // Ensure price doesn't go below 0.0001
@@ -1644,7 +1674,8 @@ loadFromStorage();
             
             // Update stock prices
             for (const symbol in currentPrices.stocks) {
-                const change = (Math.random() - 0.5) * 0.05; // -2.5% to +2.5%
+                const change = (Math.random() - 0.5) * 0.01; // -0.5% to +0.5%
+
                 currentPrices.stocks[symbol] *= (1 + change);
                 
                 // Ensure price doesn't go below 0.01
@@ -1655,7 +1686,8 @@ loadFromStorage();
             
             // Update created coins prices
             createdCoins.forEach(coin => {
-                const change = (Math.random() - 0.45) * 0.2; // -9% to +11% (more volatile)
+                const change = (Math.random() - 0.5) * 0.01; // -0.5% to +0.5%
+
                 coin.price *= (1 + change);
                coin.change = ((coin.price / parseFloat(document.getElementById('coinPrice').value)) - 1) * 100;
 
