@@ -159,7 +159,8 @@ setInterval(refreshMarketUI,5000);
 
 // ===== MODAL ======
 let selected = null, selType=null;
-function openMarketInfoModal(name,sym,type){
+function openMarketInfoModal(name, symbol, assetType){
+
   selected=sym; selType=type;
   const price = assetType === 'crypto' ? currentPrices.crypto[symbol] : currentPrices.stocks[symbol];
 
