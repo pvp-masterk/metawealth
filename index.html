@@ -1141,6 +1141,26 @@
     </div>
     
     <div class="notification" id="notification">This is a notification</div>
+
+    <div id="marketInfoModal" class="modal">
+  <div class="modal-content">
+    <span class="close-modal" onclick="closeMarketInfoModal()">&times;</span>
+    <h3 class="modal-title" id="marketInfoTitle">Market Info</h3>
+    <canvas id="marketChartCanvas" width="400" height="200" style="margin-bottom: 20px;"></canvas>
+    <div id="marketDetails">
+      <!-- Filled by JS -->
+    </div>
+    <div class="form-group">
+      <label>Amount</label>
+      <input type="number" id="marketAmount" placeholder="e.g. 2" min="0" step="any">
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <button class="btn btn-primary" id="marketBuyBtn">Buy</button>
+      <button class="btn btn-secondary" id="marketSellBtn">Sell</button>
+    </div>
+  </div>
+</div>
+
     
     <script>
         // Global variables
@@ -1452,36 +1472,129 @@ loadFromStorage();
             updateBalance();
             document.getElementById('cryptoModal').style.display = 'none';
         });
+
+function closeMarketInfoModal() {
+    document.getElementById('marketInfoModal').style.display = 'none';
+}
+
+let selectedAsset = null;
+let selectedAssetType = null;
+
+function openMarketInfoModal(name, symbol, assetType) {
+    selectedAsset = symbol;
+    selectedAssetType = assetType;
+
+    const price = assetType === 'crypto' ? currentPrices.crypto[symbol] : currentPrices.stocks[symbol];
+    const title = `${name} (${symbol})`;
+
+    document.getElementById('marketInfoTitle').textContent = title;
+    document.getElementById('marketDetails').innerHTML = `
+        <p><strong>Current Price:</strong> $${price.toFixed(2)}</p>
+        <p><strong>Type:</strong> ${assetType}</p>
+        <p><strong>Symbol:</strong> ${symbol}</p>
+    `;
+    document.getElementById('marketAmount').value = '';
+
+    drawChart(symbol); // optional chart (see next)
+    document.getElementById('marketInfoModal').style.display = 'flex';
+}
+
         
         // Stock trade functionality
         document.querySelectorAll('.stock-card button:first-child').forEach(button => {
-            button.addEventListener('click', function() {
-                const card = this.closest('.stock-card');
-                const stockName = card.querySelector('.stock-name').textContent;
-                const stockSymbol = stockName.match(/\(([^)]+)\)/)[1];
-                const stockPrice = parseFloat(card.querySelector('.stock-price').textContent.replace('$', '').replace(',', ''));
-                
-                document.getElementById('stockPrice').value = `$${stockPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                document.querySelector('#stockModal .modal-title').textContent = `Trade ${stockName}`;
-                document.getElementById('stockAction').value = 'buy';
-                
-                document.getElementById('stockModal').style.display = 'flex';
+           row.addEventListener('click', () => {
+    const name = row.querySelector('td div:nth-child(2)').textContent.split(' (')[0];
+    const symbol = row.querySelector('td div:nth-child(2)').textContent.match(/\(([^)]+)\)/)[1];
+    openMarketInfoModal(name, symbol, 'crypto');
+});
+document.getElementById('marketBuyBtn').addEventListener('click', () => {
+    handleMarketTrade('buy');
+});
+document.getElementById('marketSellBtn').addEventListener('click', () => {
+    handleMarketTrade('sell');
+});
+
             });
-        });
+
+        function handleMarketTrade(action) {
+    const amount = parseFloat(document.getElementById('marketAmount').value);
+    if (isNaN(amount) || amount <= 0) return showNotification('Invalid amount', 'error');
+
+    const price = selectedAssetType === 'crypto' ? currentPrices.crypto[selectedAsset] : currentPrices.stocks[selectedAsset];
+    const total = amount * price;
+
+    if (action === 'buy') {
+        if (userBalance < total) return showNotification('Not enough balance', 'error');
+        userBalance -= total;
+
+        if (selectedAssetType === 'crypto') {
+            if (!cryptoHoldings[selectedAsset]) cryptoHoldings[selectedAsset] = { amount: 0, avgPrice: 0 };
+            const c = cryptoHoldings[selectedAsset];
+            c.avgPrice = (c.amount * c.avgPrice + total) / (c.amount + amount);
+            c.amount += amount;
+        } else {
+            if (!stockHoldings[selectedAsset]) stockHoldings[selectedAsset] = { shares: 0, avgPrice: 0 };
+            const s = stockHoldings[selectedAsset];
+            s.avgPrice = (s.shares * s.avgPrice + total) / (s.shares + amount);
+            s.shares += amount;
+        }
+
+        adjustMarketPrice(selectedAsset, 'buy', selectedAssetType, total);
+        showNotification(`Bought ${amount} ${selectedAsset}`, 'success');
+    } else {
+        if (selectedAssetType === 'crypto') {
+            const c = cryptoHoldings[selectedAsset];
+            if (!c || c.amount < amount) return showNotification('Not enough to sell', 'error');
+            c.amount -= amount;
+            userBalance += total;
+            if (c.amount === 0) delete cryptoHoldings[selectedAsset];
+        } else {
+            const s = stockHoldings[selectedAsset];
+            if (!s || s.shares < amount) return showNotification('Not enough to sell', 'error');
+            s.shares -= amount;
+            userBalance += total;
+            if (s.shares === 0) delete stockHoldings[selectedAsset];
+        }
+
+        adjustMarketPrice(selectedAsset, 'sell', selectedAssetType, total);
+        showNotification(`Sold ${amount} ${selectedAsset}`, 'success');
+    }
+
+    updateBalance();
+    saveToStorage();
+    closeMarketInfoModal();
+}
+function drawChart(symbol) {
+    const ctx = document.getElementById('marketChartCanvas').getContext('2d');
+    ctx.clearRect(0, 0, 400, 200);
+    ctx.beginPath();
+    ctx.moveTo(0, 100 + Math.random() * 20);
+
+    for (let i = 1; i <= 20; i++) {
+        const x = i * 20;
+        const y = 100 + Math.random() * 40 - 20;
+        ctx.lineTo(x, y);
+    }
+
+    ctx.strokeStyle = "#4caf50";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+}
+
         
         document.querySelectorAll('.stock-card button:last-child').forEach(button => {
-            button.addEventListener('click', function() {
-                const card = this.closest('.stock-card');
-                const stockName = card.querySelector('.stock-name').textContent;
-                const stockSymbol = stockName.match(/\(([^)]+)\)/)[1];
-                const stockPrice = parseFloat(card.querySelector('.stock-price').textContent.replace('$', '').replace(',', ''));
-                
-                document.getElementById('stockPrice').value = `$${stockPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                document.querySelector('#stockModal .modal-title').textContent = `Trade ${stockName}`;
-                document.getElementById('stockAction').value = 'sell';
-                
-                document.getElementById('stockModal').style.display = 'flex';
-            });
+           card.addEventListener('click', () => {
+    const name = card.querySelector('.stock-name').textContent.split(' (')[0];
+    const symbol = card.querySelector('.stock-name').textContent.match(/\(([^)]+)\)/)[1];
+    openMarketInfoModal(name, symbol, 'stocks');
+});
+document.getElementById('marketBuyBtn').addEventListener('click', () => {
+    handleMarketTrade('buy');
+});
+document.getElementById('marketSellBtn').addEventListener('click', () => {
+    handleMarketTrade('sell');
+});
+
         });
         
         // Calculate stock trade total
