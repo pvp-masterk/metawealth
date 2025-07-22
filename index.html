@@ -133,7 +133,7 @@ tr.dataset.name = name;
 tr.dataset.symbol = sym;
 tr.addEventListener('click', (e) => {
   const row = e.currentTarget;
-  openMarketInfoModal(row.dataset.name, row.dataset.symbol, 'crypto');
+  tr.onclick = () => openMarketInfoModal(name, sym, 'crypto');
 });
 
     tr.innerHTML = `<td>${name} (${sym})</td><td>$${price.toFixed(2)}</td><td class="${change>=0?'positive':'negative'}">${(change*100).toFixed(2)}%</td>`;
