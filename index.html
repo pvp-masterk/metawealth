@@ -60,8 +60,14 @@
       <button id="marketSellBtn">Sell</button>
     </div>
   </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@4.0.0/dist/chartjs-chart-treemap.min.js"></script>
+<script>
+  Chart.register(Chart.TreemapController, Chart.TreemapElement);
+</script>
 
 <script>
+  
 // ====== DATA ======
 let userBalance = 10000;
 const dailyRewardAmount = 500;
@@ -240,16 +246,41 @@ function notify(msg,type='info'){
 }
 
 // ====== TREEMAP ======
-let tmChart=null;
-function drawTreemap(){
-  const ctx=document.getElementById('treemap').getContext('2d');
-  const data=[];
-  for(const [sym,obj] of Object.entries(cryptoHoldings)){
-    data.push({label:sym, value:obj.amount*currentPrices.crypto[sym]});
+let tmChart = null;
+function drawTreemap() {
+  const ctx = document.getElementById('treemap').getContext('2d');
+  const data = [];
+
+  for (const [symbol, obj] of Object.entries(cryptoHoldings)) {
+    const value = obj.amount * currentPrices.crypto[symbol];
+    data.push({ label: symbol, value });
   }
-  if(tmChart) tmChart.destroy();
-  tmChart=new Chart(ctx,{type:'treemap', data:{datasets:[{tree: data, key:'value', backgroundColor:data.map(()=>`hsl(${Math.random()*360},50%,60%)`)}]}});
+
+  if (tmChart) tmChart.destroy();
+
+  tmChart = new Chart(ctx, {
+    type: 'treemap',
+    data: {
+      datasets: [{
+        tree: data,
+        key: 'value',
+        labels: {
+          display: true,
+          align: 'center',
+          color: 'black'
+        },
+        backgroundColor: () => `hsl(${Math.random() * 360}, 60%, 70%)`
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
 }
+
 
 // ====== HOPIUM ======
 function updateHopium(){
