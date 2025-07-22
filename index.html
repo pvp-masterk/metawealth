@@ -60,19 +60,20 @@
       <button id="marketSellBtn">Sell</button>
     </div>
   </div>
-<!-- Chart.js Core -->
+<!-- Chart.js UMD build -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-<!-- Chart.js Treemap Plugin (v4) -->
+<!-- Treemap plugin UMD build -->
 <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@4.2.1/dist/chartjs-chart-treemap.umd.min.js"></script>
 
 <script>
-  // Register Treemap plugin correctly
+  // This is the correct way to register in 2025
   Chart.register(
-    window['chartjs-chart-treemap'].TreemapController,
-    window['chartjs-chart-treemap'].TreemapElement
+    Chart.TreemapController,
+    Chart.TreemapElement
   );
 </script>
+
 
 
 <script>
@@ -257,19 +258,17 @@ function notify(msg,type='info'){
 // ====== TREEMAP ======
 let tmChart = null;
   
+let tmChart = null;
 function drawTreemap() {
   const canvas = document.getElementById('treemap');
+  const ctx = canvas.getContext('2d');
 
-  // 🧨 Fix: Clear and remove previous canvas if it exists
   if (tmChart) {
     tmChart.destroy();
-    tmChart = null;
-    // Optional safety: fully reset canvas context state
-    const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    tmChart = null;
   }
 
-  const ctx = canvas.getContext('2d');
   const data = [];
 
   for (const [symbol, obj] of Object.entries(cryptoHoldings)) {
@@ -279,7 +278,6 @@ function drawTreemap() {
     }
   }
 
-  // Prevent errors if empty
   if (data.length === 0) return;
 
   tmChart = new Chart(ctx, {
@@ -304,8 +302,6 @@ function drawTreemap() {
     }
   });
 }
-
-
 
 
 // ====== HOPIUM ======
