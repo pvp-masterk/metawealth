@@ -3,524 +3,587 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ProTrade Simulator</title>
+<title>VANTAGE // Pro Terminal</title>
 <style>
+/* --- CORE THEME --- */
 :root {
-  --bg: #0f1115;
-  --panel: #161b22;
-  --border: #30363d;
-  --accent: #238636;
-  --accent-glow: rgba(35, 134, 54, 0.4);
-  --danger: #da3633;
-  --text-main: #c9d1d9;
-  --text-dim: #8b949e;
-  --chart-line: #58a6ff;
+    --bg-dark: #09090b;
+    --bg-panel: #121214;
+    --border: #27272a;
+    --primary: #3b82f6;
+    --text-main: #e4e4e7;
+    --text-mute: #71717a;
+    
+    --tick-up: #10b981;    /* Green */
+    --tick-down: #ef4444;  /* Red */
+    --tick-up-glow: rgba(16, 185, 129, 0.15);
+    --tick-down-glow: rgba(239, 68, 68, 0.15);
 }
-
-* { box-sizing: border-box; font-family: 'Segoe UI', Inter, system-ui, sans-serif; }
 
 body {
-  margin: 0;
-  background-color: var(--bg);
-  color: var(--text-main);
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+    margin: 0;
+    background: var(--bg-dark);
+    color: var(--text-main);
+    font-family: 'JetBrains Mono', 'Consolas', monospace; /* Monospace for financial data */
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Header */
+/* --- LAYOUT GRID --- */
+.app-grid {
+    display: grid;
+    grid-template-columns: 300px 1fr 320px;
+    grid-template-rows: 60px 1fr;
+    height: 100%;
+    width: 100%;
+}
+
+/* --- HEADER --- */
 header {
-  height: 60px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  justify-content: space-between;
+    grid-column: 1 / -1;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    justify-content: space-between;
 }
 
-.brand { font-weight: 800; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
-.brand span { color: var(--chart-line); }
+.brand { font-weight: 800; letter-spacing: -1px; font-size: 1.2rem; }
+.brand span { color: var(--primary); }
+.account-summary { display: flex; gap: 20px; font-size: 0.9rem; }
+.acc-val { color: var(--text-main); font-weight: 700; }
 
-/* Layout */
-.main-layout {
-  display: grid;
-  grid-template-columns: 320px 1fr 300px;
-  flex: 1;
-  overflow: hidden;
-}
-
-/* Panels */
-.panel {
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  background: rgba(22, 27, 34, 0.5);
-  overflow-y: auto;
-}
-
-.panel-header {
-  padding: 15px;
-  background: var(--panel);
-  font-weight: 600;
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-/* Stock List */
-.stock-item {
-  padding: 15px;
-  border-bottom: 1px solid var(--border);
-  transition: background 0.2s;
-  cursor: pointer;
-}
-.stock-item:hover { background: rgba(255,255,255,0.03); }
-
-.stock-top { display: flex; justify-content: space-between; margin-bottom: 5px; }
-.stock-symbol { font-weight: 700; color: #fff; }
-.stock-price { font-family: monospace; font-size: 1.1em; }
-
-.stock-details { display: flex; justify-content: space-between; font-size: 0.85em; color: var(--text-dim); }
-.trend-green { color: var(--accent); }
-.trend-red { color: var(--danger); }
-
-/* Central Chart Area */
-.chart-container {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-
-canvas {
-  width: 100%;
-  height: 300px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.stat-card {
-  background: var(--panel);
-  padding: 15px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-}
-.stat-label { font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
-.stat-value { font-size: 1.5rem; font-weight: 700; margin-top: 5px; }
-
-/* Right Panel (Portfolio & News) */
-.portfolio-item {
-  padding: 12px 15px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.btn-group { display: flex; gap: 5px; margin-top: 5px; }
-button {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  color: var(--text-main);
-  padding: 6px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.8rem;
-  transition: 0.2s;
-}
-button:hover { background: #21262d; }
-.btn-buy { background: var(--accent); color: white; border: none; }
-.btn-buy:hover { background: #2ea043; }
-.btn-sell { background: var(--danger); color: white; border: none; }
-.btn-sell:hover { background: #f85149; }
-
-/* News Feed */
-.news-feed {
-  padding: 15px;
-  font-size: 0.9em;
-}
-.news-item {
-  margin-bottom: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-.news-time { font-size: 0.75em; color: var(--text-dim); margin-bottom: 4px; }
-.news-impact { font-weight: bold; font-size: 0.75em; padding: 2px 6px; border-radius: 4px; margin-left: 5px;}
-.impact-pos { background: rgba(35, 134, 54, 0.2); color: #3fb950; }
-.impact-neg { background: rgba(218, 54, 51, 0.2); color: #f85149; }
-
-/* Logs */
-#log-container {
-    max-height: 200px;
+/* --- SIDEBARS --- */
+.sidebar {
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border);
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-right {
+    border-right: none;
+    border-left: 1px solid var(--border);
+}
+
+.panel-head {
+    padding: 12px 15px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+    position: sticky;
+    top: 0;
+}
+
+/* --- STOCK LIST --- */
+.ticker-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: 0.1s;
+    font-size: 0.9rem;
+}
+.ticker-row:hover { background: rgba(255,255,255,0.05); }
+.ticker-row.active { background: rgba(59, 130, 246, 0.1); border-left: 2px solid var(--primary); }
+
+.t-sym { font-weight: 700; }
+.t-price { text-align: right; }
+.t-chg { text-align: right; }
+
+.up { color: var(--tick-up); }
+.down { color: var(--tick-down); }
+
+/* --- MAIN CHART AREA --- */
+.main-stage {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    background: var(--bg-dark);
+}
+
+.chart-header {
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid var(--border);
+}
+
+.symbol-big { font-size: 2rem; font-weight: 800; line-height: 1; }
+.price-big { font-size: 2rem; font-weight: 400; font-family: 'Consolas', monospace; }
+
+#candleChart {
+    width: 100%;
+    flex: 1; /* Fills remaining height */
+    cursor: crosshair;
+}
+
+/* --- ORDER CONTROLS --- */
+.order-dock {
+    height: 80px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-panel);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.btn {
+    border: none;
+    padding: 0 20px;
+    height: 40px;
+    border-radius: 4px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: 0.2s;
+    text-transform: uppercase;
+    color: #fff;
+}
+.btn-buy { background: var(--tick-up); }
+.btn-buy:hover { background: #059669; }
+.btn-sell { background: var(--tick-down); }
+.btn-sell:hover { background: #dc2626; }
+.btn-close { background: var(--text-mute); }
+.btn-close:hover { background: #52525b; }
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.input-group label { font-size: 0.7rem; color: var(--text-mute); }
+input[type="number"] {
+    background: #000;
+    border: 1px solid var(--border);
+    color: white;
+    padding: 8px;
+    border-radius: 4px;
+    width: 100px;
     font-family: monospace;
-    font-size: 12px;
-    color: var(--text-dim);
-    padding: 10px;
 }
 
-/* Animations */
-@keyframes flashGreen { 0% { background: var(--accent-glow); } 100% { background: transparent; } }
-@keyframes flashRed { 0% { background: rgba(218, 54, 51, 0.4); } 100% { background: transparent; } }
-.flash-up { animation: flashGreen 0.5s ease; }
-.flash-down { animation: flashRed 0.5s ease; }
-
-/* Responsive */
-@media (max-width: 900px) {
-  .main-layout { grid-template-columns: 1fr; overflow-y: auto; }
-  .panel { height: auto; border-right: none; border-bottom: 1px solid var(--border); }
-  canvas { height: 200px; }
+/* --- PORTFOLIO & LOGS --- */
+.position-card {
+    padding: 15px;
+    border-bottom: 1px solid var(--border);
 }
+.pos-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.pos-pnl { font-size: 0.85rem; text-align: right; }
+
+.toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+    z-index: 99;
+}
+.toast {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: 12px 20px;
+    border-radius: 6px;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5);
+    font-size: 0.85rem;
+    animation: slideIn 0.3s ease-out;
+    border-left: 4px solid var(--primary);
+}
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
 </style>
 </head>
 <body>
 
-<header>
-  <div class="brand"><span>⚡</span> ProTrade Sim</div>
-  <div style="font-size:0.9rem; opacity:0.7">Build 2.0</div>
-</header>
+<div class="app-grid">
+    <!-- Header -->
+    <header>
+        <div class="brand"><span>//</span> VANTAGE TERM</div>
+        <div class="account-summary">
+            <div>LIQUID: <span id="ui-cash" class="acc-val">$0.00</span></div>
+            <div>NET LIQ: <span id="ui-equity" class="acc-val">$0.00</span></div>
+            <div>P&L: <span id="ui-pnl" class="acc-val">0.00%</span></div>
+        </div>
+    </header>
 
-<div class="main-layout">
-  
-  <!-- Left Panel: Market -->
-  <div class="panel">
-    <div class="panel-header">Market Watch</div>
-    <div id="stock-list"></div>
-  </div>
+    <!-- Left: Market Watch -->
+    <aside class="sidebar">
+        <div class="panel-head">Market Watch</div>
+        <div id="market-list"></div>
+    </aside>
 
-  <!-- Center: Charts & Stats -->
-  <div class="panel chart-container" style="border-right: 1px solid var(--border);">
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">Net Worth</div>
-        <div class="stat-value" id="net-worth">$10,000</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Available Cash</div>
-        <div class="stat-value" id="cash-balance">$10,000</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Day Gain</div>
-        <div class="stat-value" id="day-gain">0.00%</div>
-      </div>
-    </div>
-    
-    <div class="panel-header" style="background:transparent; padding-left:0;">Portfolio Performance</div>
-    <canvas id="mainChart"></canvas>
-    
-    <div class="panel-header" style="background:transparent; padding-left:0; margin-top:20px;">Transaction Log</div>
-    <div id="log-container"></div>
-  </div>
+    <!-- Center: Chart & execution -->
+    <main class="main-stage">
+        <div class="chart-header">
+            <div>
+                <div class="symbol-big" id="active-symbol">---</div>
+                <div style="font-size:0.8rem; color:var(--text-mute)" id="active-name">Select Ticker</div>
+            </div>
+            <div class="price-big" id="active-price">---</div>
+        </div>
+        
+        <canvas id="candleChart"></canvas>
 
-  <!-- Right: Portfolio & News -->
-  <div class="panel" style="border-right: none;">
-    <div class="panel-header">Your Portfolio</div>
-    <div id="portfolio-list"></div>
-    
-    <div class="panel-header" style="margin-top:auto; border-top:1px solid var(--border)">Market News</div>
-    <div class="news-feed" id="news-feed">
-      <div style="color:var(--text-dim); text-align:center;">Waiting for market events...</div>
-    </div>
-  </div>
+        <div class="order-dock">
+            <div class="input-group">
+                <label>QUANTITY</label>
+                <input type="number" id="order-qty" value="10" min="1">
+            </div>
+            <button class="btn btn-buy" onclick="executeOrder('BUY')">Buy / Cover</button>
+            <button class="btn btn-sell" onclick="executeOrder('SELL')">Sell / Short</button>
+            <div style="flex:1"></div>
+            <button class="btn btn-close" onclick="maxOrder()">Max Qty</button>
+        </div>
+    </main>
 
+    <!-- Right: Portfolio -->
+    <aside class="sidebar sidebar-right">
+        <div class="panel-head">Open Positions</div>
+        <div id="portfolio-list">
+            <div style="padding:20px; color:var(--text-mute); text-align:center">No open positions</div>
+        </div>
+        <div class="panel-head" style="margin-top:auto">Trade Log</div>
+        <div id="trade-log" style="height: 150px; font-size: 0.75rem; padding: 10px; color: var(--text-mute); overflow-y:auto"></div>
+    </aside>
 </div>
 
+<div class="toast-container" id="toaster"></div>
+
 <script>
-// --- Game State & Config ---
+/* --- CONFIGURATION --- */
 const CONFIG = {
-    updateSpeed: 1500, // ms
-    historyLength: 50
+    tickRate: 200,      // ms per tick (sim speed)
+    candleSize: 10,     // ticks per candle
+    maxCandles: 80,     // max candles on chart
+    startCash: 50000
 };
 
-let state = {
-    cash: Number(localStorage.getItem("cash")) || 10000,
-    startValue: 10000,
-    portfolio: JSON.parse(localStorage.getItem("portfolio")) || {},
-    history: [], // Net worth history
-    logs: []
+/* --- STATE MANAGEMENT --- */
+const store = {
+    cash: CONFIG.startCash,
+    equity: CONFIG.startCash,
+    startEquity: CONFIG.startCash,
+    selectedSymbol: 'NVDA',
+    positions: {}, // { 'AAPL': 10, 'TSLA': -5 } (Negative = Short)
+    stocks: [
+        { sym: 'NVDA', name: 'Nvidia Corp', price: 850.00, vol: 0.004, drift: 0.0002, candles: [] },
+        { sym: 'TSLA', name: 'Tesla Inc',   price: 175.00, vol: 0.008, drift: 0.0000, candles: [] },
+        { sym: 'AAPL', name: 'Apple Inc',   price: 170.00, vol: 0.002, drift: 0.0001, candles: [] },
+        { sym: 'AMD',  name: 'Adv Micro',   price: 180.00, vol: 0.005, drift: 0.0002, candles: [] },
+        { sym: 'GME',  name: 'GameStop',    price: 15.00,  vol: 0.020, drift: 0.0000, candles: [] },
+        { sym: 'BTC',  name: 'Bitcoin',     price: 65000,  vol: 0.010, drift: 0.0005, candles: [] },
+    ],
+    currentCandleTick: 0
 };
 
-// Stock definitions with personalities
-const stocks = [
-    { symbol: "TECH", name: "OmniTech", price: 150, vol: 0.02, trend: 0.05, history: [] },
-    { symbol: "AUTO", name: "FutureMotors", price: 45, vol: 0.04, trend: 0.01, history: [] },
-    { symbol: "BIO",  name: "LifeGen", price: 320, vol: 0.06, trend: -0.01, history: [] },
-    { symbol: "FOOD", name: "MegaMart", price: 25, vol: 0.01, trend: 0.02, history: [] },
-    { symbol: "ENER", name: "Solaris", price: 80, vol: 0.03, trend: 0.04, history: [] },
-    { symbol: "COIN", name: "BitScam", price: 5, vol: 0.15, trend: 0, history: [] }
-];
+// Initialize Stocks with empty candles
+store.stocks.forEach(s => {
+    s.currentCandle = { o: s.price, h: s.price, l: s.price, c: s.price };
+    // Generate some history
+    let tempPrice = s.price;
+    for(let i=0; i<CONFIG.maxCandles; i++) {
+        let open = tempPrice;
+        let close = open * (1 + (Math.random()-0.5)*s.vol*3);
+        s.candles.push({
+            o: open, 
+            h: Math.max(open, close) + Math.random(), 
+            l: Math.min(open, close) - Math.random(), 
+            c: close 
+        });
+        tempPrice = close;
+    }
+    s.price = tempPrice;
+});
 
-const newsEvents = [
-    { text: "Record Q3 Earnings reported by {sym}", impact: 1.15 },
-    { text: "CEO of {sym} steps down amid scandal", impact: 0.85 },
-    { text: "New product launch from {sym} goes viral", impact: 1.10 },
-    { text: "Regulatory crackdown hits {sym}", impact: 0.90 },
-    { text: "Market analysts upgrade {sym} to Buy", impact: 1.05 },
-    { text: "Supply chain issues plague {sym}", impact: 0.95 }
-];
-
-// --- Core Logic ---
-
-function init() {
-    // Fill initial history for sparklines
-    stocks.forEach(s => {
-        for(let i=0; i<20; i++) s.history.push(s.price);
-    });
-    render();
-    setInterval(tick, CONFIG.updateSpeed);
-    setInterval(generateNews, 10000); // News every 10s roughly
-    drawChart();
-}
-
+/* --- SIMULATION ENGINE --- */
 function tick() {
-    // 1. Update Prices
-    stocks.forEach(s => {
-        const volatility = s.vol;
-        const randomMove = (Math.random() - 0.5) * 2 * volatility;
-        const trendMove = s.trend * (1/100); 
+    // 1. Market Mechanics (Geometric Brownian Motion)
+    store.stocks.forEach(s => {
+        // Random Walk Math
+        const shock = (Math.random() - 0.5) * 2; // -1 to 1
+        const changePct = (s.drift) + (s.vol * shock);
+        s.price = s.price * (1 + changePct);
         
-        let change = 1 + randomMove + trendMove;
-        s.price = Math.max(0.1, s.price * change);
-        
-        s.history.push(s.price);
-        if(s.history.length > 30) s.history.shift();
+        // Update Current Candle
+        const c = s.currentCandle;
+        c.c = s.price;
+        if(s.price > c.h) c.h = s.price;
+        if(s.price < c.l) c.l = s.price;
     });
 
-    // 2. Track Net Worth
-    const stockValue = stocks.reduce((acc, s) => {
-        return acc + (s.price * (state.portfolio[s.symbol] || 0));
-    }, 0);
-    const netWorth = state.cash + stockValue;
-    
-    state.history.push(netWorth);
-    if(state.history.length > CONFIG.historyLength) state.history.shift();
+    // 2. Candle Management
+    store.currentCandleTick++;
+    if(store.currentCandleTick >= CONFIG.candleSize) {
+        store.stocks.forEach(s => {
+            s.candles.push({...s.currentCandle}); // Commit candle
+            if(s.candles.length > CONFIG.maxCandles) s.candles.shift();
+            // Start new candle
+            s.currentCandle = { o: s.price, h: s.price, l: s.price, c: s.price };
+        });
+        store.currentCandleTick = 0;
+    }
 
-    save();
-    render();
+    // 3. Portfolio Calculation
+    let positionsValue = 0;
+    Object.keys(store.positions).forEach(sym => {
+        const qty = store.positions[sym];
+        const stock = store.stocks.find(s => s.sym === sym);
+        if(stock) positionsValue += (stock.price * qty);
+    });
+    store.equity = store.cash + positionsValue;
+
+    // 4. Render Updates
+    updateUI();
     drawChart();
 }
 
-function trade(symbol, amount) {
-    const stock = stocks.find(s => s.symbol === symbol);
-    if (!stock) return;
+/* --- RENDERING --- */
+function updateUI() {
+    // Header
+    document.getElementById('ui-cash').innerText = formatCurrency(store.cash);
+    document.getElementById('ui-equity').innerText = formatCurrency(store.equity);
+    const pnl = ((store.equity - store.startEquity) / store.startEquity) * 100;
+    const pnlEl = document.getElementById('ui-pnl');
+    pnlEl.innerText = (pnl > 0 ? "+" : "") + pnl.toFixed(2) + "%";
+    pnlEl.className = "acc-val " + (pnl >= 0 ? "up" : "down");
 
-    if (amount > 0) { // Buy
-        const cost = stock.price * amount;
-        if (state.cash >= cost) {
-            state.cash -= cost;
-            state.portfolio[symbol] = (state.portfolio[symbol] || 0) + amount;
-            log(`Bought ${amount} ${symbol} @ $${stock.price.toFixed(2)}`);
-        } else {
-            alert("Insufficient Funds");
-        }
-    } else { // Sell
-        const sellAmount = Math.abs(amount);
-        if ((state.portfolio[symbol] || 0) >= sellAmount) {
-            state.cash += stock.price * sellAmount;
-            state.portfolio[symbol] -= sellAmount;
-            log(`Sold ${sellAmount} ${symbol} @ $${stock.price.toFixed(2)}`);
-        }
-    }
-    render();
-    save();
-}
-
-function generateNews() {
-    if (Math.random() > 0.7) { // 30% chance per check
-        const stock = stocks[Math.floor(Math.random() * stocks.length)];
-        const event = newsEvents[Math.floor(Math.random() * newsEvents.length)];
+    // Market List
+    const list = document.getElementById('market-list');
+    list.innerHTML = "";
+    store.stocks.forEach(s => {
+        const isActive = s.sym === store.selectedSymbol;
+        const prevClose = s.candles[s.candles.length-1].c;
+        const change = ((s.price - prevClose)/prevClose)*100;
+        const color = change >= 0 ? 'up' : 'down';
         
-        // Apply Impact
-        stock.price *= event.impact;
-        
-        // UI Log
-        const newsDiv = document.getElementById("news-feed");
-        const item = document.createElement("div");
-        item.className = "news-item";
-        
-        const impactClass = event.impact >= 1 ? "impact-pos" : "impact-neg";
-        const impactText = event.impact >= 1 ? "BULLISH" : "BEARISH";
-        
-        item.innerHTML = `
-            <div class="news-time">${new Date().toLocaleTimeString()}</div>
-            ${event.text.replace("{sym}", stock.name)}
-            <span class="news-impact ${impactClass}">${impactText}</span>
+        const el = document.createElement('div');
+        el.className = `ticker-row ${isActive ? 'active' : ''}`;
+        el.onclick = () => { store.selectedSymbol = s.sym; drawChart(); };
+        el.innerHTML = `
+            <div class="t-sym">${s.sym}</div>
+            <div class="t-price ${color}">${s.price.toFixed(2)}</div>
+            <div class="t-chg ${color}">${change > 0 ? '+' : ''}${change.toFixed(2)}%</div>
         `;
-        newsDiv.insertBefore(item, newsDiv.firstChild);
-        if(newsDiv.children.length > 5) newsDiv.lastChild.remove();
-        
-        log(`NEWS: ${event.text.replace("{sym}", stock.symbol)}`);
-    }
-}
+        list.appendChild(el);
+    });
 
-function log(msg) {
-    const box = document.getElementById("log-container");
-    const line = document.createElement("div");
-    line.textContent = `> ${msg}`;
-    box.prepend(line);
-}
+    // Chart Header
+    const activeStock = store.stocks.find(s => s.sym === store.selectedSymbol);
+    document.getElementById('active-symbol').innerText = activeStock.sym;
+    document.getElementById('active-name').innerText = activeStock.name;
+    const priceEl = document.getElementById('active-price');
+    priceEl.innerText = activeStock.price.toFixed(2);
+    priceEl.className = "price-big " + (activeStock.price >= activeStock.currentCandle.o ? "up" : "down");
 
-function save() {
-    localStorage.setItem("cash", state.cash);
-    localStorage.setItem("portfolio", JSON.stringify(state.portfolio));
-}
-
-// --- Rendering ---
-
-function render() {
-    // Update Header Stats
-    const stockValue = stocks.reduce((acc, s) => acc + (s.price * (state.portfolio[s.symbol] || 0)), 0);
-    const netWorth = state.cash + stockValue;
+    // Portfolio List
+    const portList = document.getElementById('portfolio-list');
+    const posKeys = Object.keys(store.positions).filter(k => store.positions[k] !== 0);
     
-    document.getElementById("net-worth").innerText = `$${netWorth.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    document.getElementById("cash-balance").innerText = `$${state.cash.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    
-    const gain = ((netWorth - state.startValue) / state.startValue) * 100;
-    const gainEl = document.getElementById("day-gain");
-    gainEl.innerText = (gain > 0 ? "+" : "") + gain.toFixed(2) + "%";
-    gainEl.className = "stat-value " + (gain >= 0 ? "trend-green" : "trend-red");
-
-    // Render Stocks List
-    const list = document.getElementById("stock-list");
-    // Optimization: Don't destroy DOM if possible, but for simplicity we rebuild here
-    // To keep animations, we'd need a more complex diffing, but let's just update text if exists
-    
-    if (list.children.length === 0) {
-        // Initial build
-        list.innerHTML = "";
-        stocks.forEach(s => {
-            const el = document.createElement("div");
-            el.className = "stock-item";
-            el.id = `stock-${s.symbol}`;
-            el.onclick = () => log(`Selected ${s.name}`); // Placeholder for future details
-            el.innerHTML = getStockHTML(s);
-            list.appendChild(el);
-        });
+    if(posKeys.length === 0) {
+        portList.innerHTML = `<div style="padding:20px; color:var(--text-mute); text-align:center">No open positions</div>`;
     } else {
-        // Update existing
-        stocks.forEach(s => {
-            const el = document.getElementById(`stock-${s.symbol}`);
-            const oldPrice = parseFloat(el.dataset.price || 0);
+        portList.innerHTML = "";
+        posKeys.forEach(sym => {
+            const qty = store.positions[sym];
+            const stock = store.stocks.find(s => s.sym === sym);
+            const marketVal = stock.price * qty;
+            const side = qty > 0 ? "LONG" : "SHORT";
+            const sideColor = qty > 0 ? "up" : "down";
             
-            // Visual Flash
-            if(s.price > oldPrice) { el.classList.remove("flash-down"); el.classList.add("flash-up"); }
-            else if(s.price < oldPrice) { el.classList.remove("flash-up"); el.classList.add("flash-down"); }
-            
-            // Remove animation class after plays
-            setTimeout(() => el.classList.remove("flash-up", "flash-down"), 500);
-
-            el.dataset.price = s.price;
-            el.innerHTML = getStockHTML(s);
-        });
-    }
-
-    // Render Portfolio
-    const portDiv = document.getElementById("portfolio-list");
-    portDiv.innerHTML = "";
-    Object.keys(state.portfolio).forEach(sym => {
-        const qty = state.portfolio[sym];
-        if (qty > 0) {
-            const stock = stocks.find(x => x.symbol === sym);
-            const val = stock.price * qty;
-            portDiv.innerHTML += `
-                <div class="portfolio-item">
-                    <div>
-                        <div style="font-weight:bold">${sym}</div>
-                        <div style="font-size:0.8em; color:var(--text-dim)">${qty} Shares</div>
+            portList.innerHTML += `
+                <div class="position-card">
+                    <div class="pos-header">
+                        <span style="font-weight:bold">${sym}</span>
+                        <span class="${sideColor}" style="font-size:0.8em; border:1px solid; padding:0 4px; border-radius:3px">${side}</span>
                     </div>
-                    <div style="text-align:right">
-                        <div>$${val.toFixed(2)}</div>
-                        <button class="btn-sell" onclick="trade('${sym}', -${qty})">Sell All</button>
+                    <div style="display:flex; justify-content:space-between; font-size:0.9rem">
+                        <span style="color:var(--text-mute)">${Math.abs(qty)} Shares</span>
+                        <span style="font-weight:700">${formatCurrency(marketVal)}</span>
                     </div>
                 </div>
             `;
-        }
-    });
+        });
+    }
 }
 
-function getStockHTML(s) {
-    const prev = s.history[s.history.length-2] || s.price;
-    const pct = ((s.price - prev) / prev) * 100;
-    const colorClass = pct >= 0 ? "trend-green" : "trend-red";
-    
-    return `
-        <div class="stock-top">
-            <span class="stock-symbol">${s.symbol}</span>
-            <span class="stock-price ${colorClass}">$${s.price.toFixed(2)}</span>
-        </div>
-        <div class="stock-details">
-            <span>${s.name}</span>
-            <span class="${colorClass}">${pct >= 0 ? "▲" : "▼"} ${Math.abs(pct).toFixed(2)}%</span>
-        </div>
-        <div class="btn-group" style="margin-top:8px">
-            <button class="btn-buy" onclick="event.stopPropagation(); trade('${s.symbol}', 1)">Buy 1</button>
-            <button class="btn-buy" onclick="event.stopPropagation(); trade('${s.symbol}', 10)">Buy 10</button>
-            <button class="btn-sell" onclick="event.stopPropagation(); trade('${s.symbol}', -1)">Sell 1</button>
-        </div>
-    `;
-}
-
-// --- Canvas Charting ---
-
+/* --- CHART ENGINE (CANVAS) --- */
 function drawChart() {
-    const canvas = document.getElementById("mainChart");
-    const ctx = canvas.getContext("2d");
+    const canvas = document.getElementById('candleChart');
+    const ctx = canvas.getContext('2d');
+    const parent = canvas.parentElement;
     
-    // Fix resolution
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
+    // Responsive Canvas
+    canvas.width = parent.clientWidth;
+    canvas.height = parent.clientHeight; // minus header
 
-    if (state.history.length < 2) return;
-
-    const data = state.history;
-    const min = Math.min(...data) * 0.99;
-    const max = Math.max(...data) * 1.01;
+    const stock = store.stocks.find(s => s.sym === store.selectedSymbol);
+    const data = [...stock.candles, stock.currentCandle];
+    
+    // Scale Math
+    const allPrices = data.flatMap(c => [c.l, c.h]);
+    let min = Math.min(...allPrices);
+    let max = Math.max(...allPrices);
     const range = max - min;
-    
-    ctx.clearRect(0, 0, rect.width, rect.height);
-    
-    // Gradient fill
-    const gradient = ctx.createLinearGradient(0, 0, 0, rect.height);
-    gradient.addColorStop(0, "rgba(88, 166, 255, 0.2)");
-    gradient.addColorStop(1, "rgba(88, 166, 255, 0)");
+    const padding = range * 0.1;
+    min -= padding; max += padding;
 
+    const w = canvas.width;
+    const h = canvas.height;
+    const candleWidth = (w / data.length) * 0.7;
+    const spacing = (w / data.length);
+
+    ctx.clearRect(0,0,w,h);
+
+    // Draw Grid (simple)
+    ctx.strokeStyle = '#27272a';
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    const step = rect.width / (data.length - 1);
-    
-    data.forEach((val, i) => {
-        const x = i * step;
-        const y = rect.height - ((val - min) / range) * rect.height;
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-    });
-
-    ctx.strokeStyle = "#58a6ff";
-    ctx.lineWidth = 2;
+    for(let i=1; i<5; i++){
+        const y = (h/5)*i;
+        ctx.moveTo(0, y); ctx.lineTo(w, y);
+    }
     ctx.stroke();
+
+    // Draw Candles
+    data.forEach((c, i) => {
+        const x = i * spacing + (spacing/2);
+        const yHigh = h - ((c.h - min) / (max - min)) * h;
+        const yLow = h - ((c.l - min) / (max - min)) * h;
+        const yOpen = h - ((c.o - min) / (max - min)) * h;
+        const yClose = h - ((c.c - min) / (max - min)) * h;
+
+        const isUp = c.c >= c.o;
+        ctx.fillStyle = isUp ? '#10b981' : '#ef4444';
+        ctx.strokeStyle = ctx.fillStyle;
+
+        // Wick
+        ctx.beginPath();
+        ctx.moveTo(x, yHigh);
+        ctx.lineTo(x, yLow);
+        ctx.stroke();
+
+        // Body
+        const bodyTop = Math.min(yOpen, yClose);
+        const bodyHeight = Math.abs(yClose - yOpen);
+        // Ensure even doji has 1px height
+        ctx.fillRect(x - candleWidth/2, bodyTop, candleWidth, Math.max(1, bodyHeight));
+    });
     
-    // Close path for fill
-    ctx.lineTo(rect.width, rect.height);
-    ctx.lineTo(0, rect.height);
-    ctx.fillStyle = gradient;
-    ctx.fill();
+    // Current Price Line
+    const yCurrent = h - ((stock.price - min) / (max - min)) * h;
+    ctx.strokeStyle = '#3b82f6';
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(0, yCurrent);
+    ctx.lineTo(w, yCurrent);
+    ctx.stroke();
+    ctx.setLineDash([]);
+}
+
+/* --- TRADING LOGIC --- */
+function executeOrder(side) {
+    const qtyInput = document.getElementById('order-qty');
+    const qty = parseInt(qtyInput.value);
+    if(qty <= 0) return;
+
+    const stock = store.stocks.find(s => s.sym === store.selectedSymbol);
+    const cost = stock.price * qty;
+
+    // BUY LOGIC (Buy to open OR Buy to cover)
+    if (side === 'BUY') {
+        const currentPos = store.positions[stock.sym] || 0;
+        
+        // If Short, this is covering. If Long or Flat, check cash.
+        if (currentPos < 0) {
+            // Covering short
+            store.cash -= cost; // You pay money to buy back
+            store.positions[stock.sym] += qty;
+            toast(`BOUGHT TO COVER ${qty} ${stock.sym}`, 'neutral');
+        } else {
+            // Buying long
+            if(store.cash >= cost) {
+                store.cash -= cost;
+                store.positions[stock.sym] = currentPos + qty;
+                toast(`BOUGHT ${qty} ${stock.sym} @ ${stock.price.toFixed(2)}`, 'success');
+            } else {
+                toast('INSUFFICIENT FUNDS', 'error');
+                return;
+            }
+        }
+    } 
+    // SELL LOGIC (Sell to close OR Sell Short)
+    else if (side === 'SELL') {
+        const currentPos = store.positions[stock.sym] || 0;
+        
+        // If Long, selling to close.
+        if (currentPos > 0) {
+             store.cash += cost;
+             store.positions[stock.sym] -= qty;
+             toast(`SOLD ${qty} ${stock.sym}`, 'error'); // Red for sell
+        } else {
+            // Opening Short position
+            // Margin Requirement check (simplified: need 50% cash of short value)
+            if (store.cash >= cost * 0.5) {
+                store.cash += cost; // You get cash now (liability created)
+                store.positions[stock.sym] = currentPos - qty;
+                toast(`SHORTED ${qty} ${stock.sym} @ ${stock.price.toFixed(2)}`, 'neutral');
+            } else {
+                toast('INSUFFICIENT MARGIN', 'error');
+            }
+        }
+    }
+    
+    logTrade(side, stock.sym, qty, stock.price);
+    updateUI();
+}
+
+function maxOrder() {
+    const stock = store.stocks.find(s => s.sym === store.selectedSymbol);
+    // Simple logic: Max buy with current cash
+    const maxQty = Math.floor(store.cash / stock.price);
+    if(maxQty > 0) document.getElementById('order-qty').value = maxQty;
+}
+
+/* --- UTILS --- */
+function formatCurrency(num) {
+    return '$' + num.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+function toast(msg, type) {
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.innerText = msg;
+    if(type === 'error') el.style.borderLeftColor = '#ef4444';
+    if(type === 'neutral') el.style.borderLeftColor = '#e4e4e7';
+    document.getElementById('toaster').appendChild(el);
+    setTimeout(() => el.remove(), 3000);
+}
+
+function logTrade(action, sym, qty, price) {
+    const log = document.getElementById('trade-log');
+    const time = new Date().toLocaleTimeString().split(' ')[0];
+    log.innerHTML = `<div style="border-bottom:1px solid #333; padding:4px 0">
+        <span style="color:#666">[${time}]</span> 
+        <b>${action}</b> ${qty} ${sym} @ ${price.toFixed(2)}
+    </div>` + log.innerHTML;
 }
 
 // Start
-init();
+setInterval(tick, CONFIG.tickRate);
+tick(); // First run
 </script>
 
 </body>
