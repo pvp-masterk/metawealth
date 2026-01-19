@@ -2,225 +2,525 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Stock Simulator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<title>ProTrade Simulator</title>
 <style>
 :root {
-  --bg: #0b0f14;
-  --card: #121822;
-  --accent: #3cff88;
-  --danger: #ff4d4d;
-  --text: #e6ebf2;
+  --bg: #0f1115;
+  --panel: #161b22;
+  --border: #30363d;
+  --accent: #238636;
+  --accent-glow: rgba(35, 134, 54, 0.4);
+  --danger: #da3633;
+  --text-main: #c9d1d9;
+  --text-dim: #8b949e;
+  --chart-line: #58a6ff;
 }
 
-* {
-  box-sizing: border-box;
-  font-family: Inter, system-ui, sans-serif;
-}
+* { box-sizing: border-box; font-family: 'Segoe UI', Inter, system-ui, sans-serif; }
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
+  background-color: var(--bg);
+  color: var(--text-main);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
+/* Header */
 header {
-  padding: 20px;
-  font-size: 22px;
-  font-weight: 700;
-  text-align: center;
-  background: linear-gradient(90deg, #0f172a, #020617);
+  height: 60px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  justify-content: space-between;
 }
 
-.container {
+.brand { font-weight: 800; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+.brand span { color: var(--chart-line); }
+
+/* Layout */
+.main-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  grid-template-columns: 320px 1fr 300px;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Panels */
+.panel {
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  background: rgba(22, 27, 34, 0.5);
+  overflow-y: auto;
+}
+
+.panel-header {
+  padding: 15px;
+  background: var(--panel);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Stock List */
+.stock-item {
+  padding: 15px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.2s;
+  cursor: pointer;
+}
+.stock-item:hover { background: rgba(255,255,255,0.03); }
+
+.stock-top { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.stock-symbol { font-weight: 700; color: #fff; }
+.stock-price { font-family: monospace; font-size: 1.1em; }
+
+.stock-details { display: flex; justify-content: space-between; font-size: 0.85em; color: var(--text-dim); }
+.trend-green { color: var(--accent); }
+.trend-red { color: var(--danger); }
+
+/* Central Chart Area */
+.chart-container {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }
 
-.card {
-  background: var(--card);
-  border-radius: 14px;
-  padding: 16px;
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.05);
+canvas {
+  width: 100%;
+  height: 300px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
 }
 
-.balance {
-  font-size: 20px;
-  margin-bottom: 12px;
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 20px;
 }
 
-.stock {
+.stat-card {
+  background: var(--panel);
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.stat-label { font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+.stat-value { font-size: 1.5rem; font-weight: 700; margin-top: 5px; }
+
+/* Right Panel (Portfolio & News) */
+.portfolio-item {
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px;
-  border-radius: 10px;
-  margin-bottom: 8px;
-  background: rgba(255,255,255,0.03);
 }
 
-.stock span {
-  font-weight: 500;
-}
-
+.btn-group { display: flex; gap: 5px; margin-top: 5px; }
 button {
-  background: var(--accent);
-  border: none;
-  padding: 6px 12px;
-  border-radius: 8px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  padding: 6px 10px;
+  border-radius: 6px;
   cursor: pointer;
-  font-weight: 600;
+  font-size: 0.8rem;
+  transition: 0.2s;
+}
+button:hover { background: #21262d; }
+.btn-buy { background: var(--accent); color: white; border: none; }
+.btn-buy:hover { background: #2ea043; }
+.btn-sell { background: var(--danger); color: white; border: none; }
+.btn-sell:hover { background: #f85149; }
+
+/* News Feed */
+.news-feed {
+  padding: 15px;
+  font-size: 0.9em;
+}
+.news-item {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.news-time { font-size: 0.75em; color: var(--text-dim); margin-bottom: 4px; }
+.news-impact { font-weight: bold; font-size: 0.75em; padding: 2px 6px; border-radius: 4px; margin-left: 5px;}
+.impact-pos { background: rgba(35, 134, 54, 0.2); color: #3fb950; }
+.impact-neg { background: rgba(218, 54, 51, 0.2); color: #f85149; }
+
+/* Logs */
+#log-container {
+    max-height: 200px;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    padding: 10px;
 }
 
-.sell {
-  background: var(--danger);
-  color: white;
-}
+/* Animations */
+@keyframes flashGreen { 0% { background: var(--accent-glow); } 100% { background: transparent; } }
+@keyframes flashRed { 0% { background: rgba(218, 54, 51, 0.4); } 100% { background: transparent; } }
+.flash-up { animation: flashGreen 0.5s ease; }
+.flash-down { animation: flashRed 0.5s ease; }
 
-.chart {
-  height: 140px;
-  display: flex;
-  align-items: flex-end;
-  gap: 4px;
-}
-
-.bar {
-  width: 100%;
-  background: linear-gradient(180deg, #3cff88, #1a7f4d);
-  border-radius: 4px 4px 0 0;
-  transition: height 0.3s;
-}
-
-.portfolio-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-}
-
-footer {
-  text-align: center;
-  opacity: 0.4;
-  font-size: 12px;
-  padding: 10px;
+/* Responsive */
+@media (max-width: 900px) {
+  .main-layout { grid-template-columns: 1fr; overflow-y: auto; }
+  .panel { height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+  canvas { height: 200px; }
 }
 </style>
 </head>
-
 <body>
 
-<header>📈 Stock Market Simulator</header>
+<header>
+  <div class="brand"><span>⚡</span> ProTrade Sim</div>
+  <div style="font-size:0.9rem; opacity:0.7">Build 2.0</div>
+</header>
 
-<div class="container">
-
-  <div class="card">
-    <div class="balance">💰 Balance: $<span id="balance">10000</span></div>
-    <div id="stocks"></div>
+<div class="main-layout">
+  
+  <!-- Left Panel: Market -->
+  <div class="panel">
+    <div class="panel-header">Market Watch</div>
+    <div id="stock-list"></div>
   </div>
 
-  <div class="card">
-    <h3>📊 Market Chart</h3>
-    <div class="chart" id="chart"></div>
-    <h3 style="margin-top:16px">📦 Portfolio</h3>
-    <div id="portfolio"></div>
+  <!-- Center: Charts & Stats -->
+  <div class="panel chart-container" style="border-right: 1px solid var(--border);">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Net Worth</div>
+        <div class="stat-value" id="net-worth">$10,000</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Available Cash</div>
+        <div class="stat-value" id="cash-balance">$10,000</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Day Gain</div>
+        <div class="stat-value" id="day-gain">0.00%</div>
+      </div>
+    </div>
+    
+    <div class="panel-header" style="background:transparent; padding-left:0;">Portfolio Performance</div>
+    <canvas id="mainChart"></canvas>
+    
+    <div class="panel-header" style="background:transparent; padding-left:0; margin-top:20px;">Transaction Log</div>
+    <div id="log-container"></div>
+  </div>
+
+  <!-- Right: Portfolio & News -->
+  <div class="panel" style="border-right: none;">
+    <div class="panel-header">Your Portfolio</div>
+    <div id="portfolio-list"></div>
+    
+    <div class="panel-header" style="margin-top:auto; border-top:1px solid var(--border)">Market News</div>
+    <div class="news-feed" id="news-feed">
+      <div style="color:var(--text-dim); text-align:center;">Waiting for market events...</div>
+    </div>
   </div>
 
 </div>
 
-<footer>Simulated market • No real money involved</footer>
-
 <script>
-let balance = Number(localStorage.getItem("balance")) || 10000;
-let portfolio = JSON.parse(localStorage.getItem("portfolio")) || {};
+// --- Game State & Config ---
+const CONFIG = {
+    updateSpeed: 1500, // ms
+    historyLength: 50
+};
 
+let state = {
+    cash: Number(localStorage.getItem("cash")) || 10000,
+    startValue: 10000,
+    portfolio: JSON.parse(localStorage.getItem("portfolio")) || {},
+    history: [], // Net worth history
+    logs: []
+};
+
+// Stock definitions with personalities
 const stocks = [
-  { symbol: "SIX", price: 120, vol: 2 },
-  { symbol: "NOVA", price: 60, vol: 4 },
-  { symbol: "VOID", price: 200, vol: 1.5 },
-  { symbol: "CRON", price: 35, vol: 6 }
+    { symbol: "TECH", name: "OmniTech", price: 150, vol: 0.02, trend: 0.05, history: [] },
+    { symbol: "AUTO", name: "FutureMotors", price: 45, vol: 0.04, trend: 0.01, history: [] },
+    { symbol: "BIO",  name: "LifeGen", price: 320, vol: 0.06, trend: -0.01, history: [] },
+    { symbol: "FOOD", name: "MegaMart", price: 25, vol: 0.01, trend: 0.02, history: [] },
+    { symbol: "ENER", name: "Solaris", price: 80, vol: 0.03, trend: 0.04, history: [] },
+    { symbol: "COIN", name: "BitScam", price: 5, vol: 0.15, trend: 0, history: [] }
 ];
 
-const history = [];
+const newsEvents = [
+    { text: "Record Q3 Earnings reported by {sym}", impact: 1.15 },
+    { text: "CEO of {sym} steps down amid scandal", impact: 0.85 },
+    { text: "New product launch from {sym} goes viral", impact: 1.10 },
+    { text: "Regulatory crackdown hits {sym}", impact: 0.90 },
+    { text: "Market analysts upgrade {sym} to Buy", impact: 1.05 },
+    { text: "Supply chain issues plague {sym}", impact: 0.95 }
+];
+
+// --- Core Logic ---
+
+function init() {
+    // Fill initial history for sparklines
+    stocks.forEach(s => {
+        for(let i=0; i<20; i++) s.history.push(s.price);
+    });
+    render();
+    setInterval(tick, CONFIG.updateSpeed);
+    setInterval(generateNews, 10000); // News every 10s roughly
+    drawChart();
+}
+
+function tick() {
+    // 1. Update Prices
+    stocks.forEach(s => {
+        const volatility = s.vol;
+        const randomMove = (Math.random() - 0.5) * 2 * volatility;
+        const trendMove = s.trend * (1/100); 
+        
+        let change = 1 + randomMove + trendMove;
+        s.price = Math.max(0.1, s.price * change);
+        
+        s.history.push(s.price);
+        if(s.history.length > 30) s.history.shift();
+    });
+
+    // 2. Track Net Worth
+    const stockValue = stocks.reduce((acc, s) => {
+        return acc + (s.price * (state.portfolio[s.symbol] || 0));
+    }, 0);
+    const netWorth = state.cash + stockValue;
+    
+    state.history.push(netWorth);
+    if(state.history.length > CONFIG.historyLength) state.history.shift();
+
+    save();
+    render();
+    drawChart();
+}
+
+function trade(symbol, amount) {
+    const stock = stocks.find(s => s.symbol === symbol);
+    if (!stock) return;
+
+    if (amount > 0) { // Buy
+        const cost = stock.price * amount;
+        if (state.cash >= cost) {
+            state.cash -= cost;
+            state.portfolio[symbol] = (state.portfolio[symbol] || 0) + amount;
+            log(`Bought ${amount} ${symbol} @ $${stock.price.toFixed(2)}`);
+        } else {
+            alert("Insufficient Funds");
+        }
+    } else { // Sell
+        const sellAmount = Math.abs(amount);
+        if ((state.portfolio[symbol] || 0) >= sellAmount) {
+            state.cash += stock.price * sellAmount;
+            state.portfolio[symbol] -= sellAmount;
+            log(`Sold ${sellAmount} ${symbol} @ $${stock.price.toFixed(2)}`);
+        }
+    }
+    render();
+    save();
+}
+
+function generateNews() {
+    if (Math.random() > 0.7) { // 30% chance per check
+        const stock = stocks[Math.floor(Math.random() * stocks.length)];
+        const event = newsEvents[Math.floor(Math.random() * newsEvents.length)];
+        
+        // Apply Impact
+        stock.price *= event.impact;
+        
+        // UI Log
+        const newsDiv = document.getElementById("news-feed");
+        const item = document.createElement("div");
+        item.className = "news-item";
+        
+        const impactClass = event.impact >= 1 ? "impact-pos" : "impact-neg";
+        const impactText = event.impact >= 1 ? "BULLISH" : "BEARISH";
+        
+        item.innerHTML = `
+            <div class="news-time">${new Date().toLocaleTimeString()}</div>
+            ${event.text.replace("{sym}", stock.name)}
+            <span class="news-impact ${impactClass}">${impactText}</span>
+        `;
+        newsDiv.insertBefore(item, newsDiv.firstChild);
+        if(newsDiv.children.length > 5) newsDiv.lastChild.remove();
+        
+        log(`NEWS: ${event.text.replace("{sym}", stock.symbol)}`);
+    }
+}
+
+function log(msg) {
+    const box = document.getElementById("log-container");
+    const line = document.createElement("div");
+    line.textContent = `> ${msg}`;
+    box.prepend(line);
+}
 
 function save() {
-  localStorage.setItem("balance", balance);
-  localStorage.setItem("portfolio", JSON.stringify(portfolio));
+    localStorage.setItem("cash", state.cash);
+    localStorage.setItem("portfolio", JSON.stringify(state.portfolio));
 }
 
-function updateMarket() {
-  stocks.forEach(s => {
-    const change = (Math.random() - 0.5) * s.vol;
-    s.price = Math.max(1, s.price + change);
-  });
-
-  history.push(stocks.reduce((a,b)=>a+b.price,0));
-  if (history.length > 30) history.shift();
-
-  render();
-  save();
-}
-
-function buy(stock) {
-  if (balance >= stock.price) {
-    balance -= stock.price;
-    portfolio[stock.symbol] = (portfolio[stock.symbol] || 0) + 1;
-  }
-}
-
-function sell(stock) {
-  if (portfolio[stock.symbol] > 0) {
-    portfolio[stock.symbol]--;
-    balance += stock.price;
-  }
-}
+// --- Rendering ---
 
 function render() {
-  document.getElementById("balance").textContent = balance.toFixed(2);
+    // Update Header Stats
+    const stockValue = stocks.reduce((acc, s) => acc + (s.price * (state.portfolio[s.symbol] || 0)), 0);
+    const netWorth = state.cash + stockValue;
+    
+    document.getElementById("net-worth").innerText = `$${netWorth.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    document.getElementById("cash-balance").innerText = `$${state.cash.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    
+    const gain = ((netWorth - state.startValue) / state.startValue) * 100;
+    const gainEl = document.getElementById("day-gain");
+    gainEl.innerText = (gain > 0 ? "+" : "") + gain.toFixed(2) + "%";
+    gainEl.className = "stat-value " + (gain >= 0 ? "trend-green" : "trend-red");
 
-  const stocksDiv = document.getElementById("stocks");
-  stocksDiv.innerHTML = "";
+    // Render Stocks List
+    const list = document.getElementById("stock-list");
+    // Optimization: Don't destroy DOM if possible, but for simplicity we rebuild here
+    // To keep animations, we'd need a more complex diffing, but let's just update text if exists
+    
+    if (list.children.length === 0) {
+        // Initial build
+        list.innerHTML = "";
+        stocks.forEach(s => {
+            const el = document.createElement("div");
+            el.className = "stock-item";
+            el.id = `stock-${s.symbol}`;
+            el.onclick = () => log(`Selected ${s.name}`); // Placeholder for future details
+            el.innerHTML = getStockHTML(s);
+            list.appendChild(el);
+        });
+    } else {
+        // Update existing
+        stocks.forEach(s => {
+            const el = document.getElementById(`stock-${s.symbol}`);
+            const oldPrice = parseFloat(el.dataset.price || 0);
+            
+            // Visual Flash
+            if(s.price > oldPrice) { el.classList.remove("flash-down"); el.classList.add("flash-up"); }
+            else if(s.price < oldPrice) { el.classList.remove("flash-up"); el.classList.add("flash-down"); }
+            
+            // Remove animation class after plays
+            setTimeout(() => el.classList.remove("flash-up", "flash-down"), 500);
 
-  stocks.forEach(s => {
-    const el = document.createElement("div");
-    el.className = "stock";
-    el.innerHTML = `
-      <span>${s.symbol} — $${s.price.toFixed(2)}</span>
-      <div>
-        <button onclick="buy(stocks.find(x=>x.symbol==='${s.symbol}'))">Buy</button>
-        <button class="sell" onclick="sell(stocks.find(x=>x.symbol==='${s.symbol}'))">Sell</button>
-      </div>
-    `;
-    stocksDiv.appendChild(el);
-  });
-
-  const port = document.getElementById("portfolio");
-  port.innerHTML = "";
-  Object.keys(portfolio).forEach(sym => {
-    if (portfolio[sym] > 0) {
-      port.innerHTML += `
-        <div class="portfolio-item">
-          <span>${sym}</span>
-          <span>${portfolio[sym]} shares</span>
-        </div>
-      `;
+            el.dataset.price = s.price;
+            el.innerHTML = getStockHTML(s);
+        });
     }
-  });
 
-  const chart = document.getElementById("chart");
-  chart.innerHTML = "";
-  const max = Math.max(...history, 1);
-  history.forEach(v => {
-    const bar = document.createElement("div");
-    bar.className = "bar";
-    bar.style.height = (v / max * 100) + "%";
-    chart.appendChild(bar);
-  });
+    // Render Portfolio
+    const portDiv = document.getElementById("portfolio-list");
+    portDiv.innerHTML = "";
+    Object.keys(state.portfolio).forEach(sym => {
+        const qty = state.portfolio[sym];
+        if (qty > 0) {
+            const stock = stocks.find(x => x.symbol === sym);
+            const val = stock.price * qty;
+            portDiv.innerHTML += `
+                <div class="portfolio-item">
+                    <div>
+                        <div style="font-weight:bold">${sym}</div>
+                        <div style="font-size:0.8em; color:var(--text-dim)">${qty} Shares</div>
+                    </div>
+                    <div style="text-align:right">
+                        <div>$${val.toFixed(2)}</div>
+                        <button class="btn-sell" onclick="trade('${sym}', -${qty})">Sell All</button>
+                    </div>
+                </div>
+            `;
+        }
+    });
 }
 
-render();
-setInterval(updateMarket, 1000);
+function getStockHTML(s) {
+    const prev = s.history[s.history.length-2] || s.price;
+    const pct = ((s.price - prev) / prev) * 100;
+    const colorClass = pct >= 0 ? "trend-green" : "trend-red";
+    
+    return `
+        <div class="stock-top">
+            <span class="stock-symbol">${s.symbol}</span>
+            <span class="stock-price ${colorClass}">$${s.price.toFixed(2)}</span>
+        </div>
+        <div class="stock-details">
+            <span>${s.name}</span>
+            <span class="${colorClass}">${pct >= 0 ? "▲" : "▼"} ${Math.abs(pct).toFixed(2)}%</span>
+        </div>
+        <div class="btn-group" style="margin-top:8px">
+            <button class="btn-buy" onclick="event.stopPropagation(); trade('${s.symbol}', 1)">Buy 1</button>
+            <button class="btn-buy" onclick="event.stopPropagation(); trade('${s.symbol}', 10)">Buy 10</button>
+            <button class="btn-sell" onclick="event.stopPropagation(); trade('${s.symbol}', -1)">Sell 1</button>
+        </div>
+    `;
+}
+
+// --- Canvas Charting ---
+
+function drawChart() {
+    const canvas = document.getElementById("mainChart");
+    const ctx = canvas.getContext("2d");
+    
+    // Fix resolution
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+
+    if (state.history.length < 2) return;
+
+    const data = state.history;
+    const min = Math.min(...data) * 0.99;
+    const max = Math.max(...data) * 1.01;
+    const range = max - min;
+    
+    ctx.clearRect(0, 0, rect.width, rect.height);
+    
+    // Gradient fill
+    const gradient = ctx.createLinearGradient(0, 0, 0, rect.height);
+    gradient.addColorStop(0, "rgba(88, 166, 255, 0.2)");
+    gradient.addColorStop(1, "rgba(88, 166, 255, 0)");
+
+    ctx.beginPath();
+    const step = rect.width / (data.length - 1);
+    
+    data.forEach((val, i) => {
+        const x = i * step;
+        const y = rect.height - ((val - min) / range) * rect.height;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    });
+
+    ctx.strokeStyle = "#58a6ff";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // Close path for fill
+    ctx.lineTo(rect.width, rect.height);
+    ctx.lineTo(0, rect.height);
+    ctx.fillStyle = gradient;
+    ctx.fill();
+}
+
+// Start
+init();
 </script>
 
 </body>
