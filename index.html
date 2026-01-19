@@ -1,335 +1,227 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Crypto/Stock Simulator</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    .modal { display:none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; }
-    .modal-content { background:#fff; padding:20px; width:450px; border-radius:8px; position:relative; }
-    .close-modal { position:absolute; top:10px; right:10px; cursor:pointer; }
-    .positive { color:green; } .negative { color:red; }
-    #liveFeed { max-height:150px; overflow-y:auto; background:#f9f9f9; padding:10px; margin-top:10px; }
-    #notificationFeed { max-height:120px; overflow-y:auto; background:#eef; padding:10px; margin-top:10px; }
-    #treemap { width: 100%; height: 300px; margin-top:20px; }
-  </style>
+<meta charset="UTF-8">
+<title>Stock Simulator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root {
+  --bg: #0b0f14;
+  --card: #121822;
+  --accent: #3cff88;
+  --danger: #ff4d4d;
+  --text: #e6ebf2;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+header {
+  padding: 20px;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  background: linear-gradient(90deg, #0f172a, #020617);
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding: 20px;
+}
+
+.card {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.05);
+}
+
+.balance {
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+
+.stock {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  background: rgba(255,255,255,0.03);
+}
+
+.stock span {
+  font-weight: 500;
+}
+
+button {
+  background: var(--accent);
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.sell {
+  background: var(--danger);
+  color: white;
+}
+
+.chart {
+  height: 140px;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.bar {
+  width: 100%;
+  background: linear-gradient(180deg, #3cff88, #1a7f4d);
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s;
+}
+
+.portfolio-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+
+footer {
+  text-align: center;
+  opacity: 0.4;
+  font-size: 12px;
+  padding: 10px;
+}
+</style>
 </head>
+
 <body>
 
-  <h1>📉 Crypto & Stock Simulator</h1>
-  <p>Balance: $<span id="balanceDisplay">0.00</span></p>
-  <button onclick="claimDailyReward()">Daily Reward</button>
-  <input type="text" id="promoInput" placeholder="Promo code"/>
-  <button onclick="applyPromo()">Apply Promo</button>
-  <select id="hopiumMeter" onchange="updateHopium()">Hopium Level
-    <option value="0">0 - Pessimistic</option>
-    <option value="25">25</option><option value="50">50 - Neutral</option><option value="75">75</option><option value="100">100 - Euphoric</option>
-  </select>
+<header>📈 Stock Market Simulator</header>
 
-  <h2>Crypto Market</h2>
-  <table id="crypto">
-    <thead><tr><th>Name</th><th>Price</th><th>Change</th></tr></thead>
-    <tbody></tbody>
-  </table>
+<div class="container">
 
-  <h2>Stock Market</h2>
-  <div id="stocksContainer"></div>
-
-  <h2>Treemap Portfolio</h2>
-  <canvas id="treemap"></canvas>
-
-  <h2>Transactions</h2>
-  <ul id="transactionFeed"></ul>
-
-  <h2>Notifications</h2>
-  <div id="notificationFeed"></div>
-
-  <h2>Live Trades</h2>
-  <div id="liveFeed"></div>
-
-  <!-- Asset Info Modal -->
-  <div id="marketInfoModal" class="modal">
-    <div class="modal-content">
-      <span class="close-modal" onclick="closeMarketInfoModal()">&times;</span>
-      <h3 id="marketInfoTitle">Asset Info</h3>
-      <canvas id="marketChartCanvas" width="400" height="200"></canvas>
-      <div id="marketDetails"></div>
-      <input type="number" id="marketAmount" placeholder="Amount" min="0" step="any"/>
-      <button id="marketBuyBtn">Buy</button>
-      <button id="marketSellBtn">Sell</button>
-    </div>
+  <div class="card">
+    <div class="balance">💰 Balance: $<span id="balance">10000</span></div>
+    <div id="stocks"></div>
   </div>
-<!-- Chart.js UMD build -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-<!-- Treemap plugin UMD build -->
-<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@4.2.1/dist/chartjs-chart-treemap.umd.min.js"></script>
+  <div class="card">
+    <h3>📊 Market Chart</h3>
+    <div class="chart" id="chart"></div>
+    <h3 style="margin-top:16px">📦 Portfolio</h3>
+    <div id="portfolio"></div>
+  </div>
 
-<script>
-  // This is the correct way to register in 2025
-  Chart.register(
-    Chart.TreemapController,
-    Chart.TreemapElement
-  );
-</script>
+</div>
 
-
+<footer>Simulated market • No real money involved</footer>
 
 <script>
-  
-// ====== DATA ======
-let userBalance = 10000;
-const dailyRewardAmount = 500;
-const promoCodes = { 'WELCOME50': 50, 'TRADER100':100 };
-let hopium = 50;
+let balance = Number(localStorage.getItem("balance")) || 10000;
+let portfolio = JSON.parse(localStorage.getItem("portfolio")) || {};
 
-const currentPrices = { crypto: {}, stocks: {} };
-const cryptoHoldings = {}, stockHoldings = {};
-let transactions = [], notifications = [], liveTrades = [];
+const stocks = [
+  { symbol: "SIX", price: 120, vol: 2 },
+  { symbol: "NOVA", price: 60, vol: 4 },
+  { symbol: "VOID", price: 200, vol: 1.5 },
+  { symbol: "CRON", price: 35, vol: 6 }
+];
 
-// Initialize sample markets
-const sampleCrypto = [ ['Bitcoin','BTC',50000], ['Ethereum','ETH',3500], ['Dogecoin','DOGE',0.25] ];
-const sampleStocks = [ ['Apple','AAPL',150], ['Tesla','TSLA',700], ['Amazon','AMZN',130] ];
+const history = [];
 
-function initMarkets(){
-  sampleCrypto.forEach(c=> currentPrices.crypto[c[1]] = c[2]);
-  sampleStocks.forEach(s=> currentPrices.stocks[s[1]] = s[2]);
+function save() {
+  localStorage.setItem("balance", balance);
+  localStorage.setItem("portfolio", JSON.stringify(portfolio));
 }
-initMarkets();
 
-// ====== STORAGE ======
-function loadStorage(){
-  try{
-    const d=JSON.parse(localStorage.getItem('simData'));
-    if(d){ Object.assign(window,{userBalance:d.userBalance,hopium:d.hopium});
-      Object.assign(cryptoHoldings,d.cryptoHoldings||{});
-      Object.assign(stockHoldings,d.stockHoldings||{});
-      transactions = d.transactions||[];
-      notifications = d.notifications||[];
-      liveTrades = d.liveTrades||[];
+function updateMarket() {
+  stocks.forEach(s => {
+    const change = (Math.random() - 0.5) * s.vol;
+    s.price = Math.max(1, s.price + change);
+  });
+
+  history.push(stocks.reduce((a,b)=>a+b.price,0));
+  if (history.length > 30) history.shift();
+
+  render();
+  save();
+}
+
+function buy(stock) {
+  if (balance >= stock.price) {
+    balance -= stock.price;
+    portfolio[stock.symbol] = (portfolio[stock.symbol] || 0) + 1;
+  }
+}
+
+function sell(stock) {
+  if (portfolio[stock.symbol] > 0) {
+    portfolio[stock.symbol]--;
+    balance += stock.price;
+  }
+}
+
+function render() {
+  document.getElementById("balance").textContent = balance.toFixed(2);
+
+  const stocksDiv = document.getElementById("stocks");
+  stocksDiv.innerHTML = "";
+
+  stocks.forEach(s => {
+    const el = document.createElement("div");
+    el.className = "stock";
+    el.innerHTML = `
+      <span>${s.symbol} — $${s.price.toFixed(2)}</span>
+      <div>
+        <button onclick="buy(stocks.find(x=>x.symbol==='${s.symbol}'))">Buy</button>
+        <button class="sell" onclick="sell(stocks.find(x=>x.symbol==='${s.symbol}'))">Sell</button>
+      </div>
+    `;
+    stocksDiv.appendChild(el);
+  });
+
+  const port = document.getElementById("portfolio");
+  port.innerHTML = "";
+  Object.keys(portfolio).forEach(sym => {
+    if (portfolio[sym] > 0) {
+      port.innerHTML += `
+        <div class="portfolio-item">
+          <span>${sym}</span>
+          <span>${portfolio[sym]} shares</span>
+        </div>
+      `;
     }
-  } catch(e){}
-}
-function saveStorage(){
-  localStorage.setItem('simData', JSON.stringify({userBalance,hopium,cryptoHoldings, stockHoldings, transactions, notifications, liveTrades}));
-}
+  });
 
-// ====== UI UPDATES ======
-function updateBalance(){
-  document.getElementById('balanceDisplay').textContent = userBalance.toFixed(2);
-}
-
-function refreshMarketUI(){
-  // Crypto table
-  const tbody = document.querySelector('#crypto tbody'); tbody.innerHTML = '';
-  for(const sym in currentPrices.crypto){
-    let name = sampleCrypto.find(c=>c[1]===sym)[0];
-    let price=currentPrices.crypto[sym];
-    let change=(Math.random()-0.5)*(hopium/200);
-    currentPrices.crypto[sym]=price*(1+change);
-    const tr = document.createElement('tr');
-tr.dataset.name = name;
-tr.dataset.symbol = sym;
-tr.addEventListener('click', (e) => {
-  const row = e.currentTarget;
-  tr.onclick = () => openMarketInfoModal(name, sym, 'crypto');
-});
-
-    tr.innerHTML = `<td>${name} (${sym})</td><td>$${price.toFixed(2)}</td><td class="${change>=0?'positive':'negative'}">${(change*100).toFixed(2)}%</td>`;
-    tbody.appendChild(tr);
-  }
-
-  // Stocks
-  const container = document.getElementById('stocksContainer'); container.innerHTML='';
-  for(const sym in currentPrices.stocks){
-    let name=sampleStocks.find(s=>s[1]===sym)[0];
-    let price=currentPrices.stocks[sym];
-    let change=(Math.random()-0.5)*(hopium/400);
-    currentPrices.stocks[sym]=price*(1+change);
-    const div=document.createElement('div'); div.className='stock-card';
-    div.onclick = ()=>openMarketInfoModal(name,sym,'stocks');
-    div.innerHTML= `<p>${name} (${sym})</p><p>$${price.toFixed(2)}</p>`;
-    container.appendChild(div);
-  }
-
-  drawTreemap(); updateBalance(); displayHistory(); saveStorage();
-}
-setInterval(refreshMarketUI,5000);
-
-// ===== MODAL ======
-let selected = null, selType=null;
-function openMarketInfoModal(name, symbol, assetType){
-
-  selected=sym; selType=type;
-  const price = assetType === 'crypto' ? currentPrices.crypto[symbol] : currentPrices.stocks[symbol];
-
-if (typeof price !== 'number' || isNaN(price)) {
-  alert(`Error: Could not find price for ${symbol} (${assetType})`);
-  return;
-}
-
-  document.getElementById('marketInfoTitle').textContent = `${name} (${sym})`;
-  document.getElementById('marketDetails').innerHTML = `
-    <p>Price: $${price.toFixed(2)}</p><p>Type: ${type}</p>`;
-  document.getElementById('marketAmount').value = '';
-  drawChart(sym, type);
-  document.getElementById('marketInfoModal').style.display='flex';
-}
-function closeMarketInfoModal(){ document.getElementById('marketInfoModal').style.display='none'; }
-
-// ====== CHART =====
-let chart=null;
-function drawChart(sym,type){
-  const ctx = document.getElementById('marketChartCanvas').getContext('2d');
-  if(chart) chart.destroy();
-  const points = Array.from({length:20},()=>Math.random()*currentPrices[type][sym]);
-  chart=new Chart(ctx,{type:'line',data:{labels:points.map((_,i)=>i), datasets:[{data:points, borderColor:'#4caf50', fill:false}]},options:{responsive:false}});
-}
-
-// ====== BUY/SELL ======
-document.getElementById('marketBuyBtn').onclick = ()=>handleTrade('buy');
-document.getElementById('marketSellBtn').onclick = ()=>handleTrade('sell');
-
-function handleTrade(action){
-  const amt = parseFloat(document.getElementById('marketAmount').value);
-  if(isNaN(amt)||amt<=0){ notify('Invalid amount','error'); return; }
-  const price=selType==='crypto'?currentPrices.crypto[selected]:currentPrices.stocks[selected];
-  const total = price*amt;
-  if(action==='buy' && userBalance<total){ notify('Insufficient balance','error'); return;}
-  if(action==='sell'){
-    const hold = selType==='crypto'?cryptoHoldings[selected]?.amount:stockHoldings[selected]?.shares;
-    if(!hold||hold<amt){ notify('Not enough holdings','error'); return;}
-  }
-  if(action==='buy'){
-    userBalance -= total;
-    const obj = selType==='crypto'?cryptoHoldings:stockHoldings;
-    const key = selected;
-    const prev = obj[key]||{amount:0,avgPrice:0};
-    const newAvg = ((prev.amount*prev.avgPrice)+(amt*price))/(prev.amount+amt);
-    obj[key] = selType==='crypto'?{amount:prev.amount+amt,avgPrice:newAvg}:{shares:prev.amount+amt,avgPrice:newAvg};
-  }
-  else{
-    userBalance += total;
-    const obj = selType==='crypto'?cryptoHoldings:stockHoldings;
-    obj[selected].amount = (selType==='crypto'?obj[selected].amount:obj[selected].shares)-amt;
-    if(obj[selected].amount<=0) delete obj[selected];
-  }
-  notify(`${action} ${amt} ${selected}`,'success');
-  liveTrades.unshift(`${action.toUpperCase()} ${amt} ${selected} @ $${price.toFixed(2)}`);
-  if(liveTrades.length>20) liveTrades.pop();
-  recordTransaction(action,selected,amt,price);
-  adjustMarketPrice(selected,action,selType,total);
-  updateBalance(); saveStorage(); closeMarketInfoModal(); refreshMarketUI();
-}
-
-// Market impact
-function adjustMarketPrice(sym,action,type,amt){
-  const curr = (type==='crypto'?currentPrices.crypto[sym]:currentPrices.stocks[sym]);
-  let pct = Math.min(0.05, amt/(10000));
-  currentPrices[type][sym] = curr*(1+(action==='buy'?pct:-pct));
-}
-
-// ====== REWARDS & PROMO ======
-function claimDailyReward(){
-  if(localStorage.getItem('dailyClaimed')===new Date().toDateString()){
-    notify('Already claimed today','error'); return;
-  }
-  userBalance += dailyRewardAmount;
-  localStorage.setItem('dailyClaimed', new Date().toDateString());
-  notify(`Claimed $${dailyRewardAmount}`,'success'); recordTransaction('reward','+",0,0');
-  updateBalance(); saveStorage();
-}
-function applyPromo(){
-  const code = document.getElementById('promoInput').value.trim().toUpperCase();
-  if(promoCodes[code]){
-    userBalance += promoCodes[code];
-    notify(`Promo applied +$${promoCodes[code]}`,'success');
-    delete promoCodes[code]; saveStorage(); updateBalance();
-  } else notify('Invalid or used code','error');
-}
-
-// ====== HISTORY ======
-function recordTransaction(t,s,a,p){
-  transactions.unshift({t,s,a,p,ts:new Date().toLocaleString()});
-  if(transactions.length>50) transactions.pop();
-}
-function displayHistory(){
-  const ul=document.getElementById('transactionFeed'); ul.innerHTML='';
-  transactions.forEach(tx=>ul.innerHTML+=`<li>[${tx.ts}] ${tx.t.toUpperCase()} ${tx.a} ${tx.s} at $${tx.p?.toFixed(2)||''}</li>`);
-  const nf=document.getElementById('notificationFeed'); nf.innerHTML='';
-  notifications.forEach(n=>nf.innerHTML+=`<div class="${n.type}">${n.msg}</div>`);
-  const lf=document.getElementById('liveFeed'); lf.innerHTML='';
-  liveTrades.forEach(l=>lf.innerHTML+=`<div>${l}</div>`);
-}
-
-// ====== NOTIFICATIONS ======
-function notify(msg,type='info'){
-  notifications.unshift({msg,type});
-  if(notifications.length>20) notifications.pop();
-}
-
-// ====== TREEMAP ======
-
-  
-let tmChart = null;
-function drawTreemap() {
-  const canvas = document.getElementById('treemap');
-  const ctx = canvas.getContext('2d');
-
-  if (tmChart) {
-    tmChart.destroy();
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    tmChart = null;
-  }
-
-  const data = [];
-
-  for (const [symbol, obj] of Object.entries(cryptoHoldings)) {
-    const value = obj.amount * currentPrices.crypto[symbol];
-    if (value > 0) {
-      data.push({ label: symbol, value });
-    }
-  }
-
-  if (data.length === 0) return;
-
-  tmChart = new Chart(ctx, {
-    type: 'treemap',
-    data: {
-      datasets: [{
-        tree: data,
-        key: 'value',
-        labels: {
-          display: true,
-          formatter: ctx => ctx.raw.label,
-          color: 'black'
-        },
-        backgroundColor: () => `hsl(${Math.random() * 360}, 60%, 70%)`
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false }
-      }
-    }
+  const chart = document.getElementById("chart");
+  chart.innerHTML = "";
+  const max = Math.max(...history, 1);
+  history.forEach(v => {
+    const bar = document.createElement("div");
+    bar.className = "bar";
+    bar.style.height = (v / max * 100) + "%";
+    chart.appendChild(bar);
   });
 }
 
-
-// ====== HOPIUM ======
-function updateHopium(){
-  hopium=+document.getElementById('hopiumMeter').value;
-  saveStorage();
-}
-
-// ===== INIT ======
-loadStorage();
-updateBalance();
-refreshMarketUI();
-displayHistory();
+render();
+setInterval(updateMarket, 1000);
 </script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap"></script>
+
 </body>
 </html>
