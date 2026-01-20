@@ -3,588 +3,750 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VANTAGE // Pro Terminal</title>
+<title>TradeSim Pro: AI Market</title>
 <style>
-/* --- CORE THEME --- */
+/* --- CSS VARIABLES & RESET --- */
 :root {
-    --bg-dark: #09090b;
-    --bg-panel: #121214;
-    --border: #27272a;
-    --primary: #3b82f6;
-    --text-main: #e4e4e7;
-    --text-mute: #71717a;
-    
-    --tick-up: #10b981;    /* Green */
-    --tick-down: #ef4444;  /* Red */
-    --tick-up-glow: rgba(16, 185, 129, 0.15);
-    --tick-down-glow: rgba(239, 68, 68, 0.15);
+  --bg: #050505;
+  --card: #111111;
+  --border: #333;
+  --accent: #3b82f6; /* Blue */
+  --up: #22c55e;    /* Green */
+  --down: #ef4444;  /* Red */
+  --text: #f3f4f6;
+  --text-dim: #9ca3af;
+  --gold: #eab308;
 }
 
-body {
-    margin: 0;
-    background: var(--bg-dark);
-    color: var(--text-main);
-    font-family: 'JetBrains Mono', 'Consolas', monospace; /* Monospace for financial data */
-    height: 100vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
+* { box-sizing: border-box; font-family: 'Inter', system-ui, -apple-system, sans-serif; user-select: none; }
+body { margin: 0; background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
 
-/* --- LAYOUT GRID --- */
-.app-grid {
-    display: grid;
-    grid-template-columns: 300px 1fr 320px;
-    grid-template-rows: 60px 1fr;
-    height: 100%;
-    width: 100%;
-}
-
-/* --- HEADER --- */
+/* --- LAYOUT --- */
 header {
-    grid-column: 1 / -1;
-    background: var(--bg-panel);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
-    justify-content: space-between;
+  padding: 10px 20px;
+  background: #000;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.brand { font-weight: 800; letter-spacing: -1px; font-size: 1.2rem; }
-.brand span { color: var(--primary); }
-.account-summary { display: flex; gap: 20px; font-size: 0.9rem; }
-.acc-val { color: var(--text-main); font-weight: 700; }
+.top-stats { display: flex; gap: 20px; font-size: 14px; font-weight: 600; }
+.stat-box { display: flex; flex-direction: column; }
+.stat-val { color: var(--accent); }
 
-/* --- SIDEBARS --- */
-.sidebar {
-    background: var(--bg-panel);
-    border-right: 1px solid var(--border);
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
+.main-layout {
+  display: grid;
+  grid-template-columns: 350px 1fr 300px;
+  flex: 1;
+  overflow: hidden;
 }
 
-.sidebar-right {
-    border-right: none;
-    border-left: 1px solid var(--border);
-}
+/* --- COLUMNS --- */
+.col { border-right: 1px solid var(--border); overflow-y: auto; display: flex; flex-direction: column; }
+.col:last-child { border-right: none; }
 
-.panel-head {
-    padding: 12px 15px;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    color: var(--text-mute);
-    letter-spacing: 1px;
-    border-bottom: 1px solid var(--border);
-    background: rgba(255,255,255,0.02);
-    position: sticky;
-    top: 0;
+.section-header {
+  padding: 10px;
+  background: rgba(255,255,255,0.02);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
 }
 
 /* --- STOCK LIST --- */
-.ticker-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    padding: 12px 15px;
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-    transition: 0.1s;
-    font-size: 0.9rem;
+.stock-item {
+  padding: 15px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
-.ticker-row:hover { background: rgba(255,255,255,0.05); }
-.ticker-row.active { background: rgba(59, 130, 246, 0.1); border-left: 2px solid var(--primary); }
+.stock-item:hover { background: rgba(255,255,255,0.05); }
+.stock-name { font-weight: 800; font-size: 16px; }
+.stock-price { font-family: 'Courier New', monospace; font-weight: 700; }
+.stock-change { font-size: 12px; }
 
-.t-sym { font-weight: 700; }
-.t-price { text-align: right; }
-.t-chg { text-align: right; }
-
-.up { color: var(--tick-up); }
-.down { color: var(--tick-down); }
-
-/* --- MAIN CHART AREA --- */
-.main-stage {
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    background: var(--bg-dark);
+/* --- CHART AREA --- */
+.chart-container {
+  flex: 1;
+  position: relative;
+  background: #080808;
+  display: flex;
+  flex-direction: column;
 }
+canvas { width: 100%; height: 100%; }
 
-.chart-header {
-    padding: 15px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    border-bottom: 1px solid var(--border);
+.market-status {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0,0,0,0.8);
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  border: 1px solid var(--border);
 }
+.status-open { color: var(--up); }
+.status-closed { color: var(--down); }
 
-.symbol-big { font-size: 2rem; font-weight: 800; line-height: 1; }
-.price-big { font-size: 2rem; font-weight: 400; font-family: 'Consolas', monospace; }
+/* --- CONTROLS --- */
+.controls {
+  padding: 20px;
+  border-top: 1px solid var(--border);
+  background: var(--card);
+}
+.btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+button {
+  padding: 12px;
+  border-radius: 6px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  opacity: 0.9;
+  transition: 0.2s;
+}
+button:hover { opacity: 1; transform: translateY(-1px); }
+button:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+.btn-buy { background: var(--up); color: #000; }
+.btn-sell { background: var(--down); color: #fff; }
+.btn-neutral { background: #333; color: #fff; }
 
-#candleChart {
-    width: 100%;
-    flex: 1; /* Fills remaining height */
-    cursor: crosshair;
+/* --- NEWS & EVENTS --- */
+.news-ticker {
+  background: var(--accent);
+  color: white;
+  padding: 5px;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  position: relative;
 }
+.news-content { display: inline-block; padding-left: 100%; animation: scroll 20s linear infinite; }
+@keyframes scroll { 100% { transform: translateX(-100%); } }
 
-/* --- ORDER CONTROLS --- */
-.order-dock {
-    height: 80px;
-    border-top: 1px solid var(--border);
-    background: var(--bg-panel);
-    padding: 10px 20px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
+/* --- MODAL --- */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.8);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 100;
+  visibility: hidden; opacity: 0; transition: 0.2s;
 }
+.modal-overlay.active { visibility: visible; opacity: 1; }
+.modal { background: var(--card); padding: 20px; border-radius: 10px; width: 400px; border: 1px solid var(--border); }
 
-.btn {
-    border: none;
-    padding: 0 20px;
-    height: 40px;
-    border-radius: 4px;
-    font-weight: 700;
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: 0.2s;
-    text-transform: uppercase;
-    color: #fff;
-}
-.btn-buy { background: var(--tick-up); }
-.btn-buy:hover { background: #059669; }
-.btn-sell { background: var(--tick-down); }
-.btn-sell:hover { background: #dc2626; }
-.btn-close { background: var(--text-mute); }
-.btn-close:hover { background: #52525b; }
-
-.input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-.input-group label { font-size: 0.7rem; color: var(--text-mute); }
-input[type="number"] {
-    background: #000;
-    border: 1px solid var(--border);
-    color: white;
-    padding: 8px;
-    border-radius: 4px;
-    width: 100px;
-    font-family: monospace;
-}
-
-/* --- PORTFOLIO & LOGS --- */
-.position-card {
-    padding: 15px;
-    border-bottom: 1px solid var(--border);
-}
-.pos-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
-.pos-pnl { font-size: 0.85rem; text-align: right; }
-
-.toast-container {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    pointer-events: none;
-    z-index: 99;
-}
+/* --- UTILS --- */
+.text-up { color: var(--up); }
+.text-down { color: var(--down); }
+.pill { padding: 2px 6px; border-radius: 4px; font-size: 10px; background: #333; }
 .toast {
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    color: var(--text-main);
-    padding: 12px 20px;
-    border-radius: 6px;
-    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5);
-    font-size: 0.85rem;
-    animation: slideIn 0.3s ease-out;
-    border-left: 4px solid var(--primary);
+  position: fixed; bottom: 20px; right: 20px;
+  background: var(--card); border: 1px solid var(--accent);
+  padding: 15px; border-radius: 6px;
+  animation: slideIn 0.3s forwards;
+  z-index: 999;
 }
-@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
 
 </style>
 </head>
 <body>
 
-<div class="app-grid">
-    <!-- Header -->
-    <header>
-        <div class="brand"><span>//</span> VANTAGE TERM</div>
-        <div class="account-summary">
-            <div>LIQUID: <span id="ui-cash" class="acc-val">$0.00</span></div>
-            <div>NET LIQ: <span id="ui-equity" class="acc-val">$0.00</span></div>
-            <div>P&L: <span id="ui-pnl" class="acc-val">0.00%</span></div>
-        </div>
-    </header>
+<header>
+  <div>📈 TradeSim <span style="color:var(--accent)">PRO</span></div>
+  <div class="top-stats">
+    <div class="stat-box"><span>Balance</span><span id="ui-balance" class="stat-val">$10,000</span></div>
+    <div class="stat-box"><span>Net Worth</span><span id="ui-networth" class="stat-val">$10,000</span></div>
+    <div class="stat-box"><span>Level</span><span id="ui-level" style="color:var(--gold)">1</span></div>
+  </div>
+  <div>
+    <select id="volatility-mode" style="background:#222; color:#fff; border:none; padding:5px;">
+      <option value="1">🟢 Low Volatility</option>
+      <option value="2" selected>🟡 Trader Mode</option>
+      <option value="4">🔴 Chaos Mode</option>
+    </select>
+    <button class="btn-neutral" style="padding:5px 10px; font-size:12px;" onclick="DataMgr.export()">💾 Save</button>
+  </div>
+</header>
 
-    <!-- Left: Market Watch -->
-    <aside class="sidebar">
-        <div class="panel-head">Market Watch</div>
-        <div id="market-list"></div>
-    </aside>
-
-    <!-- Center: Chart & execution -->
-    <main class="main-stage">
-        <div class="chart-header">
-            <div>
-                <div class="symbol-big" id="active-symbol">---</div>
-                <div style="font-size:0.8rem; color:var(--text-mute)" id="active-name">Select Ticker</div>
-            </div>
-            <div class="price-big" id="active-price">---</div>
-        </div>
-        
-        <canvas id="candleChart"></canvas>
-
-        <div class="order-dock">
-            <div class="input-group">
-                <label>QUANTITY</label>
-                <input type="number" id="order-qty" value="10" min="1">
-            </div>
-            <button class="btn btn-buy" onclick="executeOrder('BUY')">Buy / Cover</button>
-            <button class="btn btn-sell" onclick="executeOrder('SELL')">Sell / Short</button>
-            <div style="flex:1"></div>
-            <button class="btn btn-close" onclick="maxOrder()">Max Qty</button>
-        </div>
-    </main>
-
-    <!-- Right: Portfolio -->
-    <aside class="sidebar sidebar-right">
-        <div class="panel-head">Open Positions</div>
-        <div id="portfolio-list">
-            <div style="padding:20px; color:var(--text-mute); text-align:center">No open positions</div>
-        </div>
-        <div class="panel-head" style="margin-top:auto">Trade Log</div>
-        <div id="trade-log" style="height: 150px; font-size: 0.75rem; padding: 10px; color: var(--text-mute); overflow-y:auto"></div>
-    </aside>
+<div class="news-ticker">
+  <div class="news-content" id="news-feed">Welcome to TradeSim Pro. Market is OPEN. Watch out for volatility!</div>
 </div>
 
-<div class="toast-container" id="toaster"></div>
+<div class="main-layout">
+  <!-- LEFT: STOCKS -->
+  <div class="col">
+    <div class="section-header">Market <span id="market-timer">00:00</span></div>
+    <div id="stock-list"></div>
+  </div>
+
+  <!-- MIDDLE: CHART -->
+  <div class="chart-container">
+    <div class="market-status" id="market-status">MARKET OPEN</div>
+    <canvas id="mainChart"></canvas>
+    <div class="controls">
+      <div style="display:flex; justify-content:space-between;">
+        <h3 id="selected-stock-name" style="margin:0">SELECT A STOCK</h3>
+        <span id="selected-stock-price">$0.00</span>
+      </div>
+      <div style="font-size:12px; margin-top:5px; color:#666">
+        Owned: <span id="owned-qty">0</span> | Avg: <span id="avg-price">$0</span> | P/L: <span id="position-pl">0%</span>
+      </div>
+      <div class="btn-group">
+        <button class="btn-buy" onclick="Game.trade('buy')">BUY / COVER</button>
+        <button class="btn-sell" onclick="Game.trade('sell')">SELL / SHORT</button>
+      </div>
+      <div style="font-size:10px; text-align:center; margin-top:5px; opacity:0.5">Fee: 0.5% • Shorting Allowed</div>
+    </div>
+  </div>
+
+  <!-- RIGHT: PROGRESSION -->
+  <div class="col">
+    <div class="section-header">Portfolio & Stats</div>
+    <div id="portfolio-list" style="flex:1"></div>
+    <div class="section-header">Achievements</div>
+    <div id="achievement-list" style="height: 200px; overflow-y:auto; font-size:12px; padding:10px;"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h2 id="modal-title">Achievement Unlocked!</h2>
+    <p id="modal-msg">You made your first trade.</p>
+    <button class="btn-neutral" onclick="UI.closeModal()">Awesome</button>
+  </div>
+</div>
 
 <script>
-/* --- CONFIGURATION --- */
-const CONFIG = {
-    tickRate: 200,      // ms per tick (sim speed)
-    candleSize: 10,     // ticks per candle
-    maxCandles: 80,     // max candles on chart
-    startCash: 50000
+/**
+ * 🛠️ UTILITIES
+ */
+const Utils = {
+  rand: (min, max) => Math.random() * (max - min) + min,
+  fmt: (num) => num.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+  clamp: (num, min, max) => Math.min(Math.max(num, min), max)
 };
 
-/* --- STATE MANAGEMENT --- */
-const store = {
-    cash: CONFIG.startCash,
-    equity: CONFIG.startCash,
-    startEquity: CONFIG.startCash,
-    selectedSymbol: 'NVDA',
-    positions: {}, // { 'AAPL': 10, 'TSLA': -5 } (Negative = Short)
-    stocks: [
-        { sym: 'NVDA', name: 'Nvidia Corp', price: 850.00, vol: 0.004, drift: 0.0002, candles: [] },
-        { sym: 'TSLA', name: 'Tesla Inc',   price: 175.00, vol: 0.008, drift: 0.0000, candles: [] },
-        { sym: 'AAPL', name: 'Apple Inc',   price: 170.00, vol: 0.002, drift: 0.0001, candles: [] },
-        { sym: 'AMD',  name: 'Adv Micro',   price: 180.00, vol: 0.005, drift: 0.0002, candles: [] },
-        { sym: 'GME',  name: 'GameStop',    price: 15.00,  vol: 0.020, drift: 0.0000, candles: [] },
-        { sym: 'BTC',  name: 'Bitcoin',     price: 65000,  vol: 0.010, drift: 0.0005, candles: [] },
-    ],
-    currentCandleTick: 0
+/**
+ * 🧩 CONFIG & DATA
+ */
+const Config = {
+  fee: 0.005, // 0.5%
+  taxRate: 0.10, // 10% on profit withdrawal (simplified to daily deduction in this version)
+  candlesVisible: 40,
+  updateRate: 1000, // ms per tick
+  openDuration: 120, // seconds
+  closeDuration: 30
 };
 
-// Initialize Stocks with empty candles
-store.stocks.forEach(s => {
-    s.currentCandle = { o: s.price, h: s.price, l: s.price, c: s.price };
-    // Generate some history
-    let tempPrice = s.price;
-    for(let i=0; i<CONFIG.maxCandles; i++) {
-        let open = tempPrice;
-        let close = open * (1 + (Math.random()-0.5)*s.vol*3);
-        s.candles.push({
-            o: open, 
-            h: Math.max(open, close) + Math.random(), 
-            l: Math.min(open, close) - Math.random(), 
-            c: close 
-        });
-        tempPrice = close;
-    }
-    s.price = tempPrice;
-});
+const InitialStocks = [
+  { sym: "SIX", name: "Six Tech", price: 150, vol: 1.5, sector: "Tech" },
+  { sym: "NOVA", name: "Nova Energy", price: 45, vol: 2.5, sector: "Energy" },
+  { sym: "VOID", name: "Void Corp", price: 300, vol: 1.2, sector: "Finance" },
+  { sym: "MEME", name: "DogeRocket", price: 10, vol: 8.0, sector: "Crypto" },
+  { sym: "CRON", name: "Cronos Bio", price: 80, vol: 3.0, sector: "Health" }
+];
 
-/* --- SIMULATION ENGINE --- */
-function tick() {
-    // 1. Market Mechanics (Geometric Brownian Motion)
-    store.stocks.forEach(s => {
-        // Random Walk Math
-        const shock = (Math.random() - 0.5) * 2; // -1 to 1
-        const changePct = (s.drift) + (s.vol * shock);
-        s.price = s.price * (1 + changePct);
-        
-        // Update Current Candle
-        const c = s.currentCandle;
-        c.c = s.price;
-        if(s.price > c.h) c.h = s.price;
-        if(s.price < c.l) c.l = s.price;
-    });
+/**
+ * 🏛️ STATE MANAGEMENT
+ */
+const State = {
+  balance: 10000,
+  stocks: [],
+  portfolio: {}, // { SYM: { qty: 10, avg: 140 } }
+  history: {}, // { SYM: [{open, high, low, close, time}] }
+  level: 1,
+  xp: 0,
+  time: 0,
+  marketOpen: true,
+  cycleTimer: Config.openDuration,
+  selectedSym: "SIX",
+  volatilityMult: 1, // Controlled by UI
+  achievements: [],
+  challenges: [
+    { id: 'profit_500', text: "Make $500 Profit", target: 500, type: 'profit', done: false }
+  ]
+};
 
-    // 2. Candle Management
-    store.currentCandleTick++;
-    if(store.currentCandleTick >= CONFIG.candleSize) {
-        store.stocks.forEach(s => {
-            s.candles.push({...s.currentCandle}); // Commit candle
-            if(s.candles.length > CONFIG.maxCandles) s.candles.shift();
-            // Start new candle
-            s.currentCandle = { o: s.price, h: s.price, l: s.price, c: s.price };
-        });
-        store.currentCandleTick = 0;
-    }
+/**
+ * 📈 MARKET ENGINE
+ */
+class Stock {
+  constructor(data) {
+    this.sym = data.sym;
+    this.name = data.name;
+    this.price = data.price;
+    this.baseVol = data.vol;
+    this.momentum = 0; // -1 to 1
+    this.sector = data.sector;
+    this.currentCandle = { o: this.price, h: this.price, l: this.price, c: this.price, v: 0 };
+  }
 
-    // 3. Portfolio Calculation
-    let positionsValue = 0;
-    Object.keys(store.positions).forEach(sym => {
-        const qty = store.positions[sym];
-        const stock = store.stocks.find(s => s.sym === sym);
-        if(stock) positionsValue += (stock.price * qty);
-    });
-    store.equity = store.cash + positionsValue;
+  update() {
+    if (!State.marketOpen) return;
 
-    // 4. Render Updates
-    updateUI();
-    drawChart();
+    // AI / Random Math
+    let volatility = this.baseVol * State.volatilityMult;
+    
+    // News/Momentum impact
+    let changePct = (Utils.rand(-1, 1) * (volatility / 100)) + (this.momentum * 0.005);
+    
+    // AI Trader Simulation
+    if (Math.random() < 0.1) changePct += (Math.random() - 0.5) * 0.02; // Whale splash
+
+    let newPrice = this.price * (1 + changePct);
+    newPrice = Math.max(0.1, newPrice); // No zero
+
+    // Candle Logic
+    this.currentCandle.h = Math.max(this.currentCandle.h, newPrice);
+    this.currentCandle.l = Math.min(this.currentCandle.l, newPrice);
+    this.currentCandle.c = newPrice;
+    this.currentCandle.v += Math.floor(Math.random() * 100); // Fake volume
+
+    this.price = newPrice;
+    
+    // Momentum decay
+    this.momentum *= 0.95;
+  }
+
+  finalizeCandle() {
+    if (!State.history[this.sym]) State.history[this.sym] = [];
+    State.history[this.sym].push({ ...this.currentCandle });
+    
+    // Keep history manageable
+    if (State.history[this.sym].length > 100) State.history[this.sym].shift();
+
+    // Reset candle
+    this.currentCandle = { o: this.price, h: this.price, l: this.price, c: this.price, v: 0 };
+  }
 }
 
-/* --- RENDERING --- */
-function updateUI() {
-    // Header
-    document.getElementById('ui-cash').innerText = formatCurrency(store.cash);
-    document.getElementById('ui-equity').innerText = formatCurrency(store.equity);
-    const pnl = ((store.equity - store.startEquity) / store.startEquity) * 100;
-    const pnlEl = document.getElementById('ui-pnl');
-    pnlEl.innerText = (pnl > 0 ? "+" : "") + pnl.toFixed(2) + "%";
-    pnlEl.className = "acc-val " + (pnl >= 0 ? "up" : "down");
-
-    // Market List
-    const list = document.getElementById('market-list');
-    list.innerHTML = "";
-    store.stocks.forEach(s => {
-        const isActive = s.sym === store.selectedSymbol;
-        const prevClose = s.candles[s.candles.length-1].c;
-        const change = ((s.price - prevClose)/prevClose)*100;
-        const color = change >= 0 ? 'up' : 'down';
-        
-        const el = document.createElement('div');
-        el.className = `ticker-row ${isActive ? 'active' : ''}`;
-        el.onclick = () => { store.selectedSymbol = s.sym; drawChart(); };
-        el.innerHTML = `
-            <div class="t-sym">${s.sym}</div>
-            <div class="t-price ${color}">${s.price.toFixed(2)}</div>
-            <div class="t-chg ${color}">${change > 0 ? '+' : ''}${change.toFixed(2)}%</div>
-        `;
-        list.appendChild(el);
+/**
+ * 📰 NEWS SYSTEM
+ */
+const NewsSystem = {
+  events: [
+    { msg: "TechnoCore announces breakthrough!", effect: "SIX", val: 1.5 },
+    { msg: "Oil spill reported in pacific.", effect: "NOVA", val: -2.0 },
+    { msg: "Crypto regulation talks stall.", effect: "MEME", val: 1.0 },
+    { msg: "FDA approves new drug.", effect: "CRON", val: 2.0 },
+    { msg: "Federal Reserve hikes rates.", effect: "ALL", val: -0.5 },
+    { msg: "Analyst upgrade for banking sector.", effect: "VOID", val: 0.8 },
+    { msg: "Insider trading investigation!", effect: "RANDOM", val: -3.0 }
+  ],
+  
+  trigger() {
+    const event = this.events[Math.floor(Math.random() * this.events.length)];
+    const el = document.getElementById('news-feed');
+    el.innerText = `📰 BREAKING: ${event.msg}`;
+    
+    // Apply Effect
+    State.stocks.forEach(s => {
+      if (event.effect === "ALL" || event.effect === s.sym) {
+        s.momentum += event.val;
+      } else if (event.effect === "RANDOM" && Math.random() > 0.8) {
+        s.momentum += event.val;
+      }
     });
 
-    // Chart Header
-    const activeStock = store.stocks.find(s => s.sym === store.selectedSymbol);
-    document.getElementById('active-symbol').innerText = activeStock.sym;
-    document.getElementById('active-name').innerText = activeStock.name;
-    const priceEl = document.getElementById('active-price');
-    priceEl.innerText = activeStock.price.toFixed(2);
-    priceEl.className = "price-big " + (activeStock.price >= activeStock.currentCandle.o ? "up" : "down");
+    // Reset animation
+    const parent = el.parentElement;
+    parent.innerHTML = '';
+    parent.appendChild(el);
+  }
+};
 
-    // Portfolio List
-    const portList = document.getElementById('portfolio-list');
-    const posKeys = Object.keys(store.positions).filter(k => store.positions[k] !== 0);
+/**
+ * 🎨 RENDERER (Canvas)
+ */
+const Chart = {
+  canvas: document.getElementById('mainChart'),
+  ctx: document.getElementById('mainChart').getContext('2d'),
+  
+  resize() {
+    this.canvas.width = this.canvas.parentElement.offsetWidth;
+    this.canvas.height = this.canvas.parentElement.offsetHeight;
+  },
+
+  draw() {
+    const ctx = this.ctx;
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+    const hist = State.history[State.selectedSym] || [];
     
-    if(posKeys.length === 0) {
-        portList.innerHTML = `<div style="padding:20px; color:var(--text-mute); text-align:center">No open positions</div>`;
-    } else {
-        portList.innerHTML = "";
-        posKeys.forEach(sym => {
-            const qty = store.positions[sym];
-            const stock = store.stocks.find(s => s.sym === sym);
-            const marketVal = stock.price * qty;
-            const side = qty > 0 ? "LONG" : "SHORT";
-            const sideColor = qty > 0 ? "up" : "down";
-            
-            portList.innerHTML += `
-                <div class="position-card">
-                    <div class="pos-header">
-                        <span style="font-weight:bold">${sym}</span>
-                        <span class="${sideColor}" style="font-size:0.8em; border:1px solid; padding:0 4px; border-radius:3px">${side}</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; font-size:0.9rem">
-                        <span style="color:var(--text-mute)">${Math.abs(qty)} Shares</span>
-                        <span style="font-weight:700">${formatCurrency(marketVal)}</span>
-                    </div>
-                </div>
-            `;
-        });
-    }
-}
+    // Clear
+    ctx.fillStyle = "#080808";
+    ctx.fillRect(0, 0, w, h);
 
-/* --- CHART ENGINE (CANVAS) --- */
-function drawChart() {
-    const canvas = document.getElementById('candleChart');
-    const ctx = canvas.getContext('2d');
-    const parent = canvas.parentElement;
+    if (hist.length < 2) return;
+
+    // Scales
+    const prices = hist.map(c => [c.l, c.h]).flat();
+    const minP = Math.min(...prices) * 0.99;
+    const maxP = Math.max(...prices) * 1.01;
+    const range = maxP - minP;
     
-    // Responsive Canvas
-    canvas.width = parent.clientWidth;
-    canvas.height = parent.clientHeight; // minus header
-
-    const stock = store.stocks.find(s => s.sym === store.selectedSymbol);
-    const data = [...stock.candles, stock.currentCandle];
+    const candleW = (w - 60) / Config.candlesVisible;
     
-    // Scale Math
-    const allPrices = data.flatMap(c => [c.l, c.h]);
-    let min = Math.min(...allPrices);
-    let max = Math.max(...allPrices);
-    const range = max - min;
-    const padding = range * 0.1;
-    min -= padding; max += padding;
-
-    const w = canvas.width;
-    const h = canvas.height;
-    const candleWidth = (w / data.length) * 0.7;
-    const spacing = (w / data.length);
-
-    ctx.clearRect(0,0,w,h);
-
-    // Draw Grid (simple)
-    ctx.strokeStyle = '#27272a';
+    // Grid
+    ctx.strokeStyle = "#222";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    for(let i=1; i<5; i++){
-        const y = (h/5)*i;
+    for(let i=0; i<5; i++) {
+        let y = h - ((i/4) * h);
         ctx.moveTo(0, y); ctx.lineTo(w, y);
     }
     ctx.stroke();
 
     // Draw Candles
-    data.forEach((c, i) => {
-        const x = i * spacing + (spacing/2);
-        const yHigh = h - ((c.h - min) / (max - min)) * h;
-        const yLow = h - ((c.l - min) / (max - min)) * h;
-        const yOpen = h - ((c.o - min) / (max - min)) * h;
-        const yClose = h - ((c.c - min) / (max - min)) * h;
-
-        const isUp = c.c >= c.o;
-        ctx.fillStyle = isUp ? '#10b981' : '#ef4444';
-        ctx.strokeStyle = ctx.fillStyle;
-
-        // Wick
-        ctx.beginPath();
-        ctx.moveTo(x, yHigh);
-        ctx.lineTo(x, yLow);
-        ctx.stroke();
-
-        // Body
-        const bodyTop = Math.min(yOpen, yClose);
-        const bodyHeight = Math.abs(yClose - yOpen);
-        // Ensure even doji has 1px height
-        ctx.fillRect(x - candleWidth/2, bodyTop, candleWidth, Math.max(1, bodyHeight));
-    });
+    let startIndex = Math.max(0, hist.length - Config.candlesVisible);
     
+    hist.slice(startIndex).forEach((c, i) => {
+      const x = i * candleW + 10;
+      const yO = h - ((c.o - minP) / range * h);
+      const yC = h - ((c.c - minP) / range * h);
+      const yH = h - ((c.h - minP) / range * h);
+      const yL = h - ((c.l - minP) / range * h);
+
+      const color = c.c >= c.o ? "#22c55e" : "#ef4444"; // Green or Red
+      ctx.fillStyle = color;
+      ctx.strokeStyle = color;
+
+      // Wick
+      ctx.beginPath();
+      ctx.moveTo(x + candleW/2, yH);
+      ctx.lineTo(x + candleW/2, yL);
+      ctx.stroke();
+
+      // Body
+      const bodyH = Math.max(1, Math.abs(yC - yO));
+      ctx.fillRect(x + 2, Math.min(yO, yC), candleW - 4, bodyH);
+    });
+
     // Current Price Line
-    const yCurrent = h - ((stock.price - min) / (max - min)) * h;
-    ctx.strokeStyle = '#3b82f6';
+    const last = hist[hist.length-1];
+    const yLast = h - ((last.c - minP) / range * h);
+    ctx.strokeStyle = "#fff";
     ctx.setLineDash([5, 5]);
     ctx.beginPath();
-    ctx.moveTo(0, yCurrent);
-    ctx.lineTo(w, yCurrent);
+    ctx.moveTo(0, yLast);
+    ctx.lineTo(w, yLast);
     ctx.stroke();
     ctx.setLineDash([]);
-}
+  }
+};
 
-/* --- TRADING LOGIC --- */
-function executeOrder(side) {
-    const qtyInput = document.getElementById('order-qty');
-    const qty = parseInt(qtyInput.value);
-    if(qty <= 0) return;
+/**
+ * 🎮 GAME LOGIC
+ */
+const Game = {
+  init() {
+    // Load or Init
+    const saved = localStorage.getItem("ts_save");
+    if (saved) {
+      DataMgr.import(saved);
+    } else {
+      State.stocks = InitialStocks.map(s => new Stock(s));
+      State.stocks.forEach(s => State.history[s.sym] = []);
+    }
 
-    const stock = store.stocks.find(s => s.sym === store.selectedSymbol);
-    const cost = stock.price * qty;
+    Chart.resize();
+    window.addEventListener('resize', () => Chart.resize());
+    
+    // UI Setup
+    document.getElementById('volatility-mode').addEventListener('change', (e) => {
+      State.volatilityMult = parseFloat(e.target.value);
+    });
 
-    // BUY LOGIC (Buy to open OR Buy to cover)
-    if (side === 'BUY') {
-        const currentPos = store.positions[stock.sym] || 0;
-        
-        // If Short, this is covering. If Long or Flat, check cash.
-        if (currentPos < 0) {
-            // Covering short
-            store.cash -= cost; // You pay money to buy back
-            store.positions[stock.sym] += qty;
-            toast(`BOUGHT TO COVER ${qty} ${stock.sym}`, 'neutral');
-        } else {
-            // Buying long
-            if(store.cash >= cost) {
-                store.cash -= cost;
-                store.positions[stock.sym] = currentPos + qty;
-                toast(`BOUGHT ${qty} ${stock.sym} @ ${stock.price.toFixed(2)}`, 'success');
-            } else {
-                toast('INSUFFICIENT FUNDS', 'error');
-                return;
-            }
-        }
-    } 
-    // SELL LOGIC (Sell to close OR Sell Short)
-    else if (side === 'SELL') {
-        const currentPos = store.positions[stock.sym] || 0;
-        
-        // If Long, selling to close.
-        if (currentPos > 0) {
-             store.cash += cost;
-             store.positions[stock.sym] -= qty;
-             toast(`SOLD ${qty} ${stock.sym}`, 'error'); // Red for sell
-        } else {
-            // Opening Short position
-            // Margin Requirement check (simplified: need 50% cash of short value)
-            if (store.cash >= cost * 0.5) {
-                store.cash += cost; // You get cash now (liability created)
-                store.positions[stock.sym] = currentPos - qty;
-                toast(`SHORTED ${qty} ${stock.sym} @ ${stock.price.toFixed(2)}`, 'neutral');
-            } else {
-                toast('INSUFFICIENT MARGIN', 'error');
-            }
-        }
+    // Loops
+    setInterval(this.tick.bind(this), 1000);
+    requestAnimationFrame(this.renderLoop.bind(this));
+  },
+
+  tick() {
+    // Market Cycles
+    State.cycleTimer--;
+    if (State.cycleTimer <= 0) {
+      State.marketOpen = !State.marketOpen;
+      State.cycleTimer = State.marketOpen ? Config.openDuration : Config.closeDuration;
+      
+      const status = document.getElementById('market-status');
+      if(State.marketOpen) {
+        status.innerText = "MARKET OPEN";
+        status.className = "market-status status-open";
+        NewsSystem.trigger(); // Trigger news on open
+      } else {
+        status.innerText = "MARKET CLOSED";
+        status.className = "market-status status-closed";
+      }
+    }
+
+    document.getElementById('market-timer').innerText = 
+      `${Math.floor(State.cycleTimer / 60)}:${(State.cycleTimer % 60).toString().padStart(2,'0')}`;
+
+    if (State.marketOpen) {
+      State.stocks.forEach(s => s.update());
+      
+      // Randomly trigger news mid-day
+      if (Math.random() < 0.05) NewsSystem.trigger();
     }
     
-    logTrade(side, stock.sym, qty, stock.price);
-    updateUI();
-}
+    // Always finalize candles every tick (simulated 1-sec candles)
+    // Real apps group ticks, but for smoothness here we push often
+    State.stocks.forEach(s => s.finalizeCandle());
 
-function maxOrder() {
-    const stock = store.stocks.find(s => s.sym === store.selectedSymbol);
-    // Simple logic: Max buy with current cash
-    const maxQty = Math.floor(store.cash / stock.price);
-    if(maxQty > 0) document.getElementById('order-qty').value = maxQty;
-}
+    // Daily Challenge Check
+    this.checkChallenges();
+  },
 
-/* --- UTILS --- */
-function formatCurrency(num) {
-    return '$' + num.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-}
+  trade(type) {
+    if (!State.marketOpen) { UI.toast("Market is Closed!"); return; }
+    
+    const stock = State.stocks.find(s => s.sym === State.selectedSym);
+    const price = stock.price;
+    const fee = price * Config.fee;
 
-function toast(msg, type) {
-    const el = document.createElement('div');
-    el.className = 'toast';
-    el.innerText = msg;
-    if(type === 'error') el.style.borderLeftColor = '#ef4444';
-    if(type === 'neutral') el.style.borderLeftColor = '#e4e4e7';
-    document.getElementById('toaster').appendChild(el);
-    setTimeout(() => el.remove(), 3000);
-}
+    if (!State.portfolio[stock.sym]) State.portfolio[stock.sym] = { qty: 0, avg: 0 };
+    const pos = State.portfolio[stock.sym];
 
-function logTrade(action, sym, qty, price) {
-    const log = document.getElementById('trade-log');
-    const time = new Date().toLocaleTimeString().split(' ')[0];
-    log.innerHTML = `<div style="border-bottom:1px solid #333; padding:4px 0">
-        <span style="color:#666">[${time}]</span> 
-        <b>${action}</b> ${qty} ${sym} @ ${price.toFixed(2)}
-    </div>` + log.innerHTML;
-}
+    if (type === 'buy') {
+      // Logic for Buy (Long) or Cover (Short)
+      const cost = price + fee;
+      if (State.balance >= cost) {
+        State.balance -= cost;
+        // Avg price logic simplified
+        if (pos.qty >= 0) {
+            pos.avg = ((pos.avg * pos.qty) + price) / (pos.qty + 1);
+        }
+        pos.qty++;
+        this.addXP(10);
+      } else {
+        UI.toast("Insufficient Funds!");
+      }
+    } else {
+      // Logic for Sell (Long) or Short (Short)
+      // Short selling allowed? Yes.
+      const proceeds = price - fee;
+      State.balance += proceeds;
+      if (pos.qty > 0) {
+        // Realized profit calculation would go here for taxes
+      }
+      pos.qty--; // Can go negative (Short)
+      if (pos.qty < 0 && pos.avg === 0) pos.avg = price; // Track short entry
+      this.addXP(10);
+    }
+    
+    DataMgr.save();
+  },
 
-// Start
-setInterval(tick, CONFIG.tickRate);
-tick(); // First run
+  addXP(amount) {
+    State.xp += amount;
+    if (State.xp > State.level * 100) {
+      State.level++;
+      State.xp = 0;
+      UI.toast(`🎉 Level Up! You are now Level ${State.level}`);
+      UI.updateHeader();
+    }
+  },
+
+  checkChallenges() {
+    // Example: Check net worth for profit challenge
+    const netWorth = this.calcNetWorth();
+    const profit = netWorth - 10000;
+    
+    State.challenges.forEach(c => {
+      if(!c.done && c.type === 'profit' && profit >= c.target) {
+        c.done = true;
+        this.unlockAchievement(`Challenge: ${c.text}`);
+        this.addXP(500);
+      }
+    });
+  },
+
+  calcNetWorth() {
+    let equity = 0;
+    for (const [sym, pos] of Object.entries(State.portfolio)) {
+      const stock = State.stocks.find(s => s.sym === sym);
+      if (stock) equity += pos.qty * stock.price;
+    }
+    return State.balance + equity;
+  },
+
+  unlockAchievement(title) {
+    if (!State.achievements.includes(title)) {
+      State.achievements.push(title);
+      UI.showModal("Achievement Unlocked 🏆", title);
+    }
+  },
+
+  renderLoop() {
+    UI.update();
+    Chart.draw();
+    requestAnimationFrame(this.renderLoop.bind(this));
+  }
+};
+
+/**
+ * 🖥️ UI UPDATE
+ */
+const UI = {
+  update() {
+    // Update Header
+    document.getElementById('ui-balance').innerText = Utils.fmt(State.balance);
+    document.getElementById('ui-networth').innerText = Utils.fmt(Game.calcNetWorth());
+    
+    // Update Stock List
+    const list = document.getElementById('stock-list');
+    list.innerHTML = '';
+    State.stocks.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'stock-item';
+      if (s.sym === State.selectedSym) div.style.background = 'rgba(255,255,255,0.1)';
+      
+      const lastO = s.currentCandle.o; // Open of current tick
+      const color = s.price >= lastO ? 'text-up' : 'text-down';
+      
+      div.innerHTML = `
+        <div>
+          <div class="stock-name">${s.sym} <span class="pill">${s.sector}</span></div>
+          <div class="stock-change ${color}">${s.price >= lastO ? '▲' : '▼'}</div>
+        </div>
+        <div class="stock-price ${color}">${Utils.fmt(s.price)}</div>
+      `;
+      div.onclick = () => { State.selectedSym = s.sym; };
+      list.appendChild(div);
+    });
+
+    // Update Selected Stock Panel
+    const sel = State.stocks.find(s => s.sym === State.selectedSym);
+    document.getElementById('selected-stock-name').innerText = sel.name;
+    document.getElementById('selected-stock-price').innerText = Utils.fmt(sel.price);
+    
+    // Update Portfolio Panel
+    const portDiv = document.getElementById('portfolio-list');
+    portDiv.innerHTML = '';
+    
+    // Stats for Selected Stock
+    const myPos = State.portfolio[sel.sym] || { qty: 0, avg: 0 };
+    document.getElementById('owned-qty').innerText = myPos.qty;
+    document.getElementById('avg-price').innerText = Utils.fmt(myPos.avg);
+    
+    let plVal = 0;
+    if (myPos.qty !== 0) {
+      const marketVal = myPos.qty * sel.price;
+      const costBasis = myPos.qty * myPos.avg;
+      plVal = ((marketVal - costBasis) / Math.abs(costBasis)) * 100;
+    }
+    const plEl = document.getElementById('position-pl');
+    plEl.innerText = plVal.toFixed(2) + '%';
+    plEl.className = plVal >= 0 ? 'text-up' : 'text-down';
+
+    // Full Portfolio List
+    for (const [sym, pos] of Object.entries(State.portfolio)) {
+        if (pos.qty === 0) continue;
+        const s = State.stocks.find(x => x.sym === sym);
+        if(!s) continue;
+        const val = pos.qty * s.price;
+        const row = document.createElement('div');
+        row.style.padding = '10px';
+        row.style.fontSize = '12px';
+        row.style.borderBottom = '1px solid #222';
+        row.innerHTML = `
+            <div style="display:flex; justify-content:space-between">
+                <b>${sym}</b>
+                <span>${pos.qty} shares</span>
+            </div>
+            <div style="color:${val >= pos.qty*pos.avg ? '#4ade80':'#f87171'}">
+                ${Utils.fmt(val)}
+            </div>
+        `;
+        portDiv.appendChild(row);
+    }
+    
+    // Achievements List
+    const achList = document.getElementById('achievement-list');
+    achList.innerHTML = State.achievements.map(a => `<div>🏆 ${a}</div>`).join('');
+  },
+
+  updateHeader() {
+    document.getElementById('ui-level').innerText = State.level;
+  },
+
+  toast(msg) {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.innerText = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+  },
+
+  showModal(title, msg) {
+    document.getElementById('modal-title').innerText = title;
+    document.getElementById('modal-msg').innerText = msg;
+    document.getElementById('modal-overlay').classList.add('active');
+  },
+
+  closeModal() {
+    document.getElementById('modal-overlay').classList.remove('active');
+  }
+};
+
+/**
+ * 💾 DATA MANAGER
+ */
+const DataMgr = {
+  save() {
+    // Convert Stocks back to pure data for saving (remove methods)
+    const data = {
+      balance: State.balance,
+      portfolio: State.portfolio,
+      level: State.level,
+      xp: State.xp,
+      achievements: State.achievements,
+      stocks: State.stocks.map(s => ({ sym: s.sym, name: s.name, price: s.price, vol: s.baseVol, sector: s.sector })),
+      history: State.history // Careful, this can get big
+    };
+    localStorage.setItem("ts_save", JSON.stringify(data));
+  },
+
+  import(jsonStr) {
+    try {
+      const data = JSON.parse(jsonStr);
+      State.balance = data.balance;
+      State.portfolio = data.portfolio;
+      State.level = data.level;
+      State.xp = data.xp;
+      State.achievements = data.achievements || [];
+      State.history = data.history || {};
+      
+      // Rehydrate Stock objects
+      State.stocks = data.stocks.map(s => new Stock(s));
+      
+      UI.toast("Game Loaded!");
+      UI.updateHeader();
+    } catch(e) {
+      console.error(e);
+      UI.toast("Save file corrupted, starting new.");
+      State.stocks = InitialStocks.map(s => new Stock(s));
+    }
+  },
+
+  export() {
+    this.save();
+    UI.toast("Game Saved to LocalStorage");
+  }
+};
+
+// Start Game
+Game.init();
+
 </script>
-
 </body>
 </html>
